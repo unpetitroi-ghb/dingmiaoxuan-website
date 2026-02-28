@@ -161,7 +161,13 @@
         border-radius: 32px;
         border: 2px dashed rgba(255, 255, 255, 0.5);
       }
-      .hero-avatar-svg { width: 100%; height: 100%; display: block; }
+      .hero-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 24px;
+        display: block;
+      }
       .hero-avatar-note {
         position: absolute;
         bottom: 10px;
@@ -328,19 +334,8 @@
         </div>
         <div class="hero-avatar-wrapper" aria-hidden="true">
           <div class="hero-avatar-card">
-            <svg class="hero-avatar-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="60" cy="60" r="52" fill="#FFE8B5" stroke="#f5cc8f" stroke-width="3" />
-              <path d="M20 60 Q 60 10 100 60 Z" fill="#9b5a38" stroke="#7f4227" stroke-width="2.5" stroke-linecap="round" />
-              <circle cx="60" cy="63" r="26" fill="#ffe2c6" />
-              <path d="M38 52 Q 60 38 82 52 Q 74 40 60 40 Q 46 40 38 52 Z" fill="#9b5a38" />
-              <circle cx="49" cy="63" r="3" fill="#4a2b22" />
-              <circle cx="71" cy="63" r="3" fill="#4a2b22" />
-              <path d="M50 74 Q 60 80 70 74" fill="none" stroke="#e08a6b" stroke-width="2.3" stroke-linecap="round" />
-              <circle cx="46" cy="70" r="3.2" fill="#ffb6a9" opacity="0.7" />
-              <circle cx="74" cy="70" r="3.2" fill="#ffb6a9" opacity="0.7" />
-              <path d="M88 50 l2.4 4.5 5 0.7-3.6 3.5 0.9 5-4.6-2.4-4.6 2.4 0.9-5-3.6-3.5 5-0.7z" fill="#fff7c7" stroke="#f4b44b" stroke-width="1" />
-            </svg>
-            <div class="hero-avatar-note">叮叮 · 5岁</div>
+            <img src="avatar.png" alt="暖暖" class="hero-avatar-img" />
+            <div class="hero-avatar-note">暖暖 · 5岁</div>
           </div>
         </div>
       </section>
@@ -378,7 +373,7 @@
         <div class="more-stars"><span>✦</span><span>☁</span><span>✦</span></div>
         <div class="more-content">
           <div class="more-text">更多奇妙创意正在孵化中...</div>
-          <div class="more-sub">也许会有声音玩具、图形小游戏、和叮叮一起写的「宇宙手册」。</div>
+          <div class="more-sub">也许会有声音玩具、图形小游戏、和暖暖一起写的「宇宙手册」。</div>
         </div>
       </section>
       <footer class="footer">
