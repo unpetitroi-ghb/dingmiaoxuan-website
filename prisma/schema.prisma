@@ -1,0 +1,49 @@
+// V5 Flow: 角色库 + 多图线索推理
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StoryStatus {
+  draft
+  generating
+  completed
+}
+
+model Character {
+  id                  String    @id @default(cuid())
+  name                String
+  relationship        String?   // e.g. "daughter", "son"
+  gender              String?
+  age_range           String?   // e.g. "3-6"
+  visual_tags         Json?     // AI 提取的特征 { labels: string[], summary?: string }
+  avatar_url          String?   // 上传的原图
+  reference_image_url String?   // 用于即梦的垫图（可与 avatar_url 相同或处理后的图）
+  userId              String?   // 预留给未来 Auth
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  stories Story[]
+}
+
+model Story {
+  id                  String      @id @default(cuid())
+  title               String?
+  status              StoryStatus @default(draft)
+  clue_images         Json?       // string[] 多张线索图 URL
+  clue_analysis       Json?       // 每张图的分析结果 [{ url, summary, labels }]
+  story_summary       String?     // 根据图+角色汇总的故事概要（用户可编辑）
+  recommended_themes  Json?       // 根据概要推荐的寓教于乐方向 [{ title, summary, moral_lesson? }]
+  selected_theme      String?     // 用户选的方向（存 title 或 index）
+  moral_lesson        String?     // 教育意义
+  script              Json?       // 最终分镜 { title, pages: [{ text, description }] }
+  page_characters     Json?       // 每页使用的角色 id：string[][]，page_characters[i] 为第 i 页的角色 id 列表
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  cast Character[]
+}

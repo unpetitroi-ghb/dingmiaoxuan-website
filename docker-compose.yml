@@ -1,0 +1,65 @@
+# 本地或云端一键启动：PostgreSQL + 万物识别 + Next.js
+# 使用：docker compose up -d
+# 访问：http://localhost:3000
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dingmiaoxuan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-dingmiaoxuan}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dingmiaoxuan} -d ${POSTGRES_DB:-dingmiaoxuan}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  vision:
+    build:
+      context: ./vision-service
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - VISION_MODEL=${VISION_MODEL:-openai/clip-vit-base-patch32}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-dingmiaoxuan}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-dingmiaoxuan}
+      - VISION_SERVICE_URL=http://vision:5001
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - JIMENG_API_KEY=${JIMENG_API_KEY}
+      - JIMENG_SECRET_KEY=${JIMENG_SECRET_KEY}
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+      - GCS_KEY_FILE=/app/gcs-key.json
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+    depends_on:
+      db:
+        condition: service_healthy
+      vision:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./gcs-key.json:/app/gcs-key.json:ro
+
+volumes:
+  postgres_data:

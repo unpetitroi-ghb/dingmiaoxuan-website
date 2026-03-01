@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+/* ========== 魔法绘本风 · 儿童友好设计系统 ========== */
+:root {
+  --background: #fffbeb;
+  --foreground: #292524;
+  --kid-bg: #fffbeb;
+  --kid-bg-alt: #fef3c7;
+  --kid-primary: #ea580c;
+  --kid-primary-soft: #fb923c;
+  --kid-secondary: #2dd4bf;
+  --kid-accent: #c45c8a;
+  --kid-muted: #78716c;
+  --kid-card: #ffffff;
+  --kid-card-border: #fde68a;
+  --kid-shadow: 0 10px 40px rgba(234, 88, 12, 0.12);
+  --kid-radius: 1.5rem;
+  --kid-radius-xl: 1.875rem;
+  --kid-tap: 56px;
+  --font-display: "ZCOOL KuaiLe", "Ma Shan Zheng", var(--font-geist-sans), "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-reading: "KaiTi", "楷体", "STKaiti", "PingFang SC", serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-kid-primary: #ea580c;
+  --color-kid-primary-soft: #fb923c;
+  --color-kid-muted: #78716c;
+  --color-kid-secondary: #2dd4bf;
+  --color-kid-accent: #c45c8a;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--kid-bg);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 1.125rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 儿童向卡片：超大圆角、明显阴影、温馨白 */
+.kid-card {
+  background: var(--kid-card);
+  border-radius: var(--kid-radius-xl);
+  border: 2px solid var(--kid-card-border);
+  box-shadow: var(--kid-shadow);
+  padding: 1.5rem;
+}
+
+.kid-page {
+  min-height: 100vh;
+  padding: 1.5rem 1rem 2rem;
+  background: linear-gradient(180deg, var(--kid-bg) 0%, var(--kid-bg-alt) 100%);
+}
+
+/* 主按钮：高 14/16、点击 scale-95 */
+.kid-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--kid-tap);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: #fff;
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  border: none;
+  border-radius: var(--kid-radius);
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.kid-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+}
+.kid-btn-primary:active {
+  transform: scale(0.95);
+}
+.kid-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 次按钮 */
+.kid-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--kid-tap);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--kid-primary);
+  background: #fff;
+  border: 2px solid var(--kid-primary-soft);
+  border-radius: var(--kid-radius);
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.kid-btn-secondary:hover {
+  background: var(--kid-bg-alt);
+  color: #c2410c;
+}
+.kid-btn-secondary:active {
+  transform: scale(0.95);
+}
+
+/* 输入框：底色填充（白底嵌在米黄上） */
+.kid-input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.125rem;
+  color: var(--foreground);
+  background: #fff;
+  border: none;
+  border-radius: var(--kid-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+.kid-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
+}
+.kid-input::placeholder {
+  color: var(--kid-muted);
+}
+
+/* 标题：圆润字体 */
+.kid-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ea580c;
+  letter-spacing: -0.02em;
+}
+.kid-heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.kid-muted {
+  color: var(--kid-muted);
+  font-size: 0.9375rem;
+}
+
+/* 阅读用字体（预览页） */
+.kid-reading {
+  font-family: var(--font-reading);
+}
+
+/* 上传区缩略图 */
+.kid-thumbnail {
+  width: 5rem;
+  height: 5rem;
+  flex-shrink: 0;
+  background: var(--kid-bg-alt);
+}
+
+/* 预览页翻页动画 */
+@keyframes preview-slide-left {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes preview-slide-right {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.preview-slide-left { animation: preview-slide-left 0.3s ease-out; }
+.preview-slide-right { animation: preview-slide-right 0.3s ease-out; }
+
+/* 纸张纹理（预览页文字区） */
+.kid-paper {
+  background-color: #fefce8;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* 浮动云朵/星星背景 */
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(8px, -6px) rotate(2deg); }
+}
+@keyframes float-slower {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-6px, 4px); }
+}
+.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+.animate-float-slower { animation: float-slower 8s ease-in-out infinite; }
+
+/* 笔在纸上画画（Waiting 页） */
+@keyframes pen-draw {
+  0% { transform: translate(0, 0) rotate(-5deg); }
+  25% { transform: translate(12px, 8px) rotate(2deg); }
+  50% { transform: translate(6px, 16px) rotate(-2deg); }
+  75% { transform: translate(16px, 6px) rotate(3deg); }
+  100% { transform: translate(0, 0) rotate(-5deg); }
+}
+.animate-pen-draw { animation: pen-draw 2.5s ease-in-out infinite; }
+
+/* 选中卡片跳动 */
+@keyframes card-bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.animate-card-bounce { animation: card-bounce 1.5s ease-in-out infinite; }
+
+/* 兼容旧类名 */
+.comic-card {
+  background: var(--kid-card);
+  border-radius: var(--kid-radius-xl);
+  border: 2px solid var(--kid-card-border);
+  box-shadow: var(--kid-shadow);
+  padding: 1.5rem;
+}
+.comic-btn-primary { min-height: var(--kid-tap); padding: 0.75rem 1.5rem; font-weight: 600; font-size: 1.0625rem; color: #fff; background: linear-gradient(180deg, #f97316 0%, #ea580c 100%); border: none; border-radius: var(--kid-radius); box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35); }
+.comic-btn-secondary { min-height: var(--kid-tap); padding: 0.75rem 1.5rem; font-weight: 600; font-size: 1rem; color: var(--kid-primary); background: #fff; border: 2px solid var(--kid-primary-soft); border-radius: var(--kid-radius); }
+.comic-page { min-height: 100vh; padding: 1.5rem 1rem 2rem; background: linear-gradient(180deg, var(--kid-bg) 0%, var(--kid-bg-alt) 100%); }
+.comic-title { font-size: 1.75rem; font-weight: 700; color: #ea580c; }
+.comic-input { width: 100%; min-height: 3rem; padding: 0.75rem 1rem; font-size: 1.125rem; background: #fff; border: none; border-radius: var(--kid-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }

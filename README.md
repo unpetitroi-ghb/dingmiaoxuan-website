@@ -1,144 +1,98 @@
-# 丁妙煊的奇妙工坊 · dingmiaoxuan.com
+# 暖暖绘本
 
-为 5 岁丁妙煊做的个人作品展示主页，部署后作为 **dingmiaoxuan.com** 的首页；页面上可点击「进去瞧瞧」进入明珠问天（独立 Cloud Run 服务）。
-
----
-
-## 一、项目结构说明
-
-- **本目录**：仅包含静态首页（`index.html`），无后端、无数据库。
-- **首页内容**：丁妙煊的奇妙工坊标题、简介、两个项目卡片（明珠问天 + 奇妙绘本工坊）。
-- **明珠问天**：按钮链接到独立地址（如 `https://mingzhu-wentian-xxx.asia-southeast1.run.app`），在新标签页打开，不占用本域名路径。
-
-**整体关系：**
-
-```
-dingmiaoxuan.com（本仓库部署）
-    → 打开即「丁妙煊的奇妙工坊」首页
-    → 点击「进去瞧瞧」→ 跳转到 明珠问天 的 Cloud Run 地址（新标签页）
-
-明珠问天（mingzhu-wentian 仓库部署）
-    → 单独一个 Cloud Run 服务，用 run.app 或自备域名均可
-```
+> 用你家照片，为孩子生成独一无二的 AI 绘本。
 
 ---
 
-## 二、推送到 GitHub
+## 项目介绍
 
-### 方式 A：独立仓库（推荐）
+**暖暖绘本**是一款面向家长和儿童的 AI 绘本创作产品。用户上传孩子的照片后，系统会通过图像识别理解照片内容，再结合家长填写的故事创意和主角名字，由 AI 自动生成一篇短篇漫画脚本，并由即梦 4.0 为每一页绘制插画，最终形成一本可编辑、可导出 PDF 或图片的专属绘本。
 
-1. 在 GitHub 新建空仓库，例如命名为 `dingmiaoxuan` 或 `dingmiaoxuan-website`。
-2. 在本机**单独复制本目录**为一份新文件夹（不要带进 mingzhu-wentian 其它文件）：
+### 面向谁
 
-   ```bash
-   # 例如
-   cp -r /path/to/mingzhu-wentian/dingmiaoxuan ~/dingmiaoxuan-site
-   cd ~/dingmiaoxuan-site
-   ```
+- **主要用户**：希望为孩子定制个性化绘本的家长
+- **阅读对象**：3～10 岁儿童
+- **使用场景**：家庭纪念、睡前故事、节日礼物、亲子互动
 
-3. 初始化并推送：
+### 能做什么
 
-   ```bash
-   git init
-   git add .
-   git commit -m "feat: 丁妙煊的奇妙工坊静态首页"
-   git remote add origin https://github.com/你的用户名/dingmiaoxuan.git
-   git branch -M main
-   git push -u origin main
-   ```
+1. **上传照片**：上传 1～5 张孩子或家庭照片，作为故事主角与场景参考。
+2. **智能分析**：本地视觉服务（CLIP）分析照片，给出中文标签与简要描述，供后续故事生成使用。
+3. **填写创意**：为主角取名（默认「暖暖」）、写几句故事想法、选择漫画风格（水彩 / 日漫 / 美漫 / 卡通 / 绘本）。
+4. **一键生成**：DeepSeek 根据分析结果和创意生成 6 页漫画脚本，即梦 4.0 为每页绘制插画。
+5. **预览与导出**：在线翻页阅读、编辑每页文字，支持导出 PDF、打印、下载单页或全部图片（ZIP），以及分享链接。
 
-### 方式 B：放在 mingzhu-wentian 仓库内
+### 产品特点
 
-若希望和明珠问天同仓库存放，可保留当前 `mingzhu-wentian/dingmiaoxuan` 目录，直接：
+- **儿童友好界面**：柔和配色、大按钮、简洁步骤，适合家长与儿童共同使用。
+- **全流程在浏览器完成**：上传、分析、生成、预览、导出均在同一站点内完成。
+- **必须配合本地视觉服务**：照片分析依赖项目自带的 Python 视觉服务，需先启动后再使用「分析照片」功能。
+
+---
+
+## 技术概览
+
+- **前端**：Next.js 16（TypeScript + Tailwind CSS）
+- **图像存储**：Google Cloud Storage
+- **图像分析**：本地 Python 服务（Flask + CLIP），返回中文标签
+- **故事生成**：DeepSeek API
+- **插画生成**：即梦 4.0（火山引擎）
+- **导出**：PDF（@react-pdf/renderer）、ZIP 图片包、浏览器打印
+
+---
+
+## 快速开始
+
+### 1. 环境准备
+
+- Node.js 18+
+- Python 3.9+（用于视觉服务）
+- 已配置的 DeepSeek API Key、即梦 AK/SK、GCS 桶及密钥文件
+
+### 2. 安装依赖
 
 ```bash
-cd /path/to/mingzhu-wentian
-git add dingmiaoxuan/
-git commit -m "feat: 添加丁妙煊的奇妙工坊静态站"
-git push origin main
+npm install
 ```
 
-部署时需在 **dingmiaoxuan 目录下**执行 Cloud Build（见下文），或为 Cloud Build 配置 `dir: dingmiaoxuan`（若使用触发器）。
+### 3. 配置环境变量
 
----
+在项目根目录创建 `.env.local`，填入 DeepSeek、即梦、GCS、视觉服务地址等（可参考 `.env.example` 或 DEPLOYMENT.md）。
 
-## 三、部署到 Google Cloud Run
-
-### 1. 前置条件
-
-- 已安装 [gcloud CLI](https://cloud.google.com/sdk/docs/install) 并登录：`gcloud auth login`
-- 在 GCP 控制台为**同一项目**（或新建项目）开启：**Cloud Build API**、**Artifact Registry API**、**Cloud Run API**
-- 若尚未创建 Docker 仓库，在 Artifact Registry 创建名为 `cloud-run-source-deploy` 的仓库（与 `cloudbuild.yaml` 中一致），区域选 `asia-southeast1`：
-
-  ```bash
-  gcloud artifacts repositories create cloud-run-source-deploy \
-    --repository-format=docker \
-    --location=asia-southeast1 \
-    --project=你的项目ID
-  ```
-
-### 2. 在 dingmiaoxuan 目录下构建并部署
-
-**若为独立仓库**（在复制出来的 `dingmiaoxuan-site` 根目录）：
+### 4. 启动视觉服务（必须）
 
 ```bash
-cd ~/dingmiaoxuan-site   # 或你的 dingmiaoxuan 目录
-gcloud config set project 你的项目ID
-gcloud builds submit --config=cloudbuild.yaml .
+cd vision-service
+python3 -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python3 vision_service.py
 ```
 
-**若在 mingzhu-wentian 仓库内**：
+服务默认运行在 `http://localhost:5001`。
+
+### 5. 启动 Next.js
 
 ```bash
-cd /path/to/mingzhu-wentian/dingmiaoxuan
-gcloud config set project 你的项目ID
-gcloud builds submit --config=cloudbuild.yaml .
+npm run dev
 ```
 
-成功后 Cloud Run 会给出服务 URL，形如：  
-`https://dingmiaoxuan-xxxxx-as.a.run.app`。可先访问该链接确认首页正常。
+浏览器访问 `http://localhost:3000`，点击「开始创作」即可使用。
 
 ---
 
-## 四、将域名 dingmiaoxuan.com 指向 Cloud Run
+## 文档索引
 
-1. **在 Cloud Run 控制台添加自定义域名**
-   - 打开 [Cloud Run](https://console.cloud.google.com/run) → 选择服务 `dingmiaoxuan` → 「管理自定义网域」/「Manage custom domains」。
-   - 点击「添加映射」→ 选择该服务与区域 → 网域填写 `dingmiaoxuan.com`（以及如需 `www.dingmiaoxuan.com`）。
-   - 按提示完成**网域验证**（若使用 Google 域名或 Search Console 验证）。
-
-2. **在域名注册商处配置 DNS**
-   - 控制台会给出需要添加的记录（CNAME 或 A 记录及目标值）。
-   - 到购买 dingmiaoxuan.com 的域名服务商（如 Google Domains、阿里云、Cloudflare 等）的 DNS 设置里，按 Cloud Run 控制台**实际显示的记录类型和目标**添加：
-     - **根域名 dingmiaoxuan.com**：按提示添加 A 或 CNAME。
-     - **www.dingmiaoxuan.com**：若在控制台添加了 www，按给出的 CNAME 填写。
-   - 保存后等待 DNS 生效（几分钟到 48 小时不等）。
-
-3. **SSL**
-   - Cloud Run 为自定义域名自动提供 HTTPS，无需额外配置证书。
-
-完成后，打开 **https://dingmiaoxuan.com** 应显示「丁妙煊的奇妙工坊」首页；点击「进去瞧瞧」会在新标签页打开明珠问天。
+| 文档 | 说明 |
+|------|------|
+| **README.md**（本文件） | 项目介绍与快速开始 |
+| **DEVELOPMENT.md** | 开发文档：功能说明、架构、目录、API、设计系统、可优化方向（面向开发者 / AI） |
+| **DEPLOYMENT.md** | 部署说明：Docker、环境变量、GCS、视觉服务与构建注意点 |
+| **vision-service/README.md** | 视觉服务安装、模型说明与接口说明 |
 
 ---
 
-## 五、修改明珠问天链接地址
+## 许可证与致谢
 
-若明珠问天日后换了 URL（例如换了 Cloud Run 服务名或绑了子域名），只需改本仓库里的 `index.html`：
-
-- 搜索 `mingzhu-wentian-pqoiehovoq-as.a.run.app`（或当前使用的 URL）。
-- 替换为新的明珠问天地址，保存后重新部署本仓库即可。
-
----
-
-## 六、本地预览
-
-在 dingmiaoxuan 目录下用任意静态服务器即可，例如：
-
-```bash
-cd dingmiaoxuan
-npx serve .
-# 或
-python3 -m http.server 8080
-```
-
-浏览器打开 `http://localhost:8080` 即可查看首页。
+- 项目为私有仓库，版权归项目方所有。
+- 使用到 DeepSeek、即梦 4.0、Google Cloud、OpenAI CLIP 等第三方服务，请遵守各自使用条款。
