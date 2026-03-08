@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import fs from 'fs';
 import { analyzeBatchFromBuffers } from '@/lib/vision-python';
+import { normalizeImageToJpeg } from '@/lib/image-utils';
 
 export const config = {
   api: { bodyParser: false },
@@ -46,13 +47,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: '请上传至少一张图片（字段名 images[]）' });
   }
 
-  const payloads = entries.map((e) => ({
+  const rawPayloads = entries.map((e) => ({
     buffer: fs.readFileSync(e.filepath),
     filename: e.originalFilename,
     contentType: e.mimetype,
   }));
 
-  // 清理临时文件
   for (const e of entries) {
     try {
       fs.unlinkSync(e.filepath);
@@ -61,13 +61,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
+  const payloads = await Promise.all(
+    rawPayloads.map((p) => normalizeImageToJpeg(p.buffer, p.contentType, p.filename))
+  );
+
   const result = await analyzeBatchFromBuffers(payloads);
 
   if (!result.success || !result.data) {
-    console.error('analyze-images vision service error:', result.error);
+    const message =
+      '图像分析失败，请检查腾讯混元配置（环境变量 HUNYUAN_API_KEY）。';
+    console.error('analyze-images vision error:', result.error);
     return res.status(503).json({
       error: 'VISION_SERVICE_UNAVAILABLE',
-      message: '万物识别服务未启动或不可用，请先启动 vision-service（见项目 vision-service 目录）。',
+      message,
     });
   }
 

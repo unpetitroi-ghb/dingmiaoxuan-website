@@ -17,7 +17,7 @@
 ### 能做什么
 
 1. **上传照片**：上传 1～5 张孩子或家庭照片，作为故事主角与场景参考。
-2. **智能分析**：本地视觉服务（CLIP）分析照片，给出中文标签与简要描述，供后续故事生成使用。
+2. **智能分析**：腾讯混元（hunyuan-vision）分析照片，给出中文标签与简要描述，供后续故事生成使用。
 3. **填写创意**：为主角取名（默认「暖暖」）、写几句故事想法、选择漫画风格（水彩 / 日漫 / 美漫 / 卡通 / 绘本）。
 4. **一键生成**：DeepSeek 根据分析结果和创意生成 6 页漫画脚本，即梦 4.0 为每页绘制插画。
 5. **预览与导出**：在线翻页阅读、编辑每页文字，支持导出 PDF、打印、下载单页或全部图片（ZIP），以及分享链接。
@@ -26,15 +26,15 @@
 
 - **儿童友好界面**：柔和配色、大按钮、简洁步骤，适合家长与儿童共同使用。
 - **全流程在浏览器完成**：上传、分析、生成、预览、导出均在同一站点内完成。
-- **必须配合本地视觉服务**：照片分析依赖项目自带的 Python 视觉服务，需先启动后再使用「分析照片」功能。
+- **视觉分析使用腾讯混元**：照片分析依赖腾讯混元 API（需配置 HUNYUAN_API_KEY），无需本地 Python 服务。
 
 ---
 
 ## 技术概览
 
 - **前端**：Next.js 16（TypeScript + Tailwind CSS）
-- **图像存储**：Google Cloud Storage
-- **图像分析**：本地 Python 服务（Flask + CLIP），返回中文标签
+- **图像存储**：服务器本地（public/uploads）
+- **图像分析**：腾讯混元（hunyuan-vision）图生文
 - **故事生成**：DeepSeek API
 - **插画生成**：即梦 4.0（火山引擎）
 - **导出**：PDF（@react-pdf/renderer）、ZIP 图片包、浏览器打印
@@ -47,7 +47,7 @@
 
 - Node.js 18+
 - Python 3.9+（用于视觉服务）
-- 已配置的 DeepSeek API Key、即梦 AK/SK、GCS 桶及密钥文件
+- 已配置的 DeepSeek API Key、即梦 AK/SK、腾讯混元 API Key（HUNYUAN_API_KEY）
 
 ### 2. 安装依赖
 
@@ -57,21 +57,9 @@ npm install
 
 ### 3. 配置环境变量
 
-在项目根目录创建 `.env.local`，填入 DeepSeek、即梦、GCS、视觉服务地址等（可参考 `.env.example` 或 DEPLOYMENT.md）。
+在项目根目录创建 `.env.local`，填入 DeepSeek、即梦、HUNYUAN_API_KEY 等（云端部署见 **docs/腾讯云部署指南.md**）。
 
-### 4. 启动视觉服务（必须）
-
-```bash
-cd vision-service
-python3 -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python3 vision_service.py
-```
-
-服务默认运行在 `http://localhost:5001`。
-
-### 5. 启动 Next.js
+### 4. 启动 Next.js
 
 ```bash
 npm run dev
@@ -87,12 +75,12 @@ npm run dev
 |------|------|
 | **README.md**（本文件） | 项目介绍与快速开始 |
 | **DEVELOPMENT.md** | 开发文档：功能说明、架构、目录、API、设计系统、可优化方向（面向开发者 / AI） |
-| **DEPLOYMENT.md** | 部署说明：Docker、环境变量、GCS、视觉服务与构建注意点 |
-| **vision-service/README.md** | 视觉服务安装、模型说明与接口说明 |
+| **docs/腾讯云部署指南.md** | 腾讯云 Ubuntu 部署：Docker、环境变量、PostgreSQL 与构建 |
+| **docs/ADMIN.md** | 管理后台 `/admin`：服务状态、使用统计（默认密码 123456） |
 
 ---
 
 ## 许可证与致谢
 
 - 项目为私有仓库，版权归项目方所有。
-- 使用到 DeepSeek、即梦 4.0、Google Cloud、OpenAI CLIP 等第三方服务，请遵守各自使用条款。
+- 使用到 DeepSeek、即梦 4.0、腾讯混元等第三方服务，请遵守各自使用条款。

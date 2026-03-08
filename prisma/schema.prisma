@@ -34,6 +34,7 @@ model Story {
   id                  String      @id @default(cuid())
   title               String?
   status              StoryStatus @default(draft)
+  guestId             String?     @map("guest_id")  // 未登录访客标识，用于免费额度统计
   clue_images         Json?       // string[] 多张线索图 URL
   clue_analysis       Json?       // 每张图的分析结果 [{ url, summary, labels }]
   story_summary       String?     // 根据图+角色汇总的故事概要（用户可编辑）
@@ -46,4 +47,12 @@ model Story {
   updatedAt           DateTime    @updatedAt
 
   cast Character[]
+}
+
+model ApiCall {
+  id        String   @id @default(cuid())
+  service   String   // deepseek | jimeng | vision
+  storyId   String?
+  guestId   String?
+  createdAt DateTime @default(now())
 }

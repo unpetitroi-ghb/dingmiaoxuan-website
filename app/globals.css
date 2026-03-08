@@ -1,19 +1,54 @@
 @import "tailwindcss";
 
-/* ========== 魔法绘本风 · 儿童友好设计系统 ========== */
+/* ========== 魔法绘本风 · 紫橙魔法调 ========== */
 :root {
-  --background: #fffbeb;
-  --foreground: #292524;
-  --kid-bg: #fffbeb;
-  --kid-bg-alt: #fef3c7;
-  --kid-primary: #ea580c;
-  --kid-primary-soft: #fb923c;
-  --kid-secondary: #2dd4bf;
-  --kid-accent: #c45c8a;
-  --kid-muted: #78716c;
-  --kid-card: #ffffff;
-  --kid-card-border: #fde68a;
-  --kid-shadow: 0 10px 40px rgba(234, 88, 12, 0.12);
+  /* 主色 - 柔和的珊瑚橙 */
+  --kid-primary: #FF8A5C;
+  --kid-primary-soft: #FFE4D6;
+  --kid-primary-dark: #E06E4A;
+
+  /* 魔法紫色系 */
+  --kid-magic-light: #A78BFA;
+  --kid-magic: #8B5CF6;
+  --kid-magic-dark: #6D4BBF;
+
+  /* 功能色 */
+  --kid-success: #10B981;
+  --kid-info: #60A5FA;
+  --kid-warning: #F59E0B;
+  --kid-error: #F87171;
+  --kid-error-soft: #FEE2E2;
+
+  /* 童话点缀 */
+  --kid-candy: #FDA4AF;
+  --kid-mint: #6EE7B7;
+  --kid-star: #FBBF24;
+
+  /* 中性色 - 彻底移除黄色背景 */
+  --kid-background: #F9FAFB;
+  --kid-card-bg: #FFFFFF;
+  --kid-card-alt: #F3F4F6;
+  --kid-border-light: #E5E7EB;
+  --kid-border-accent: #FDE68A;
+
+  --kid-text-primary: #1F2937;
+  --kid-text-muted: #6B7280;
+  --kid-text-placeholder: #9CA3AF;
+
+  /* 阴影 - 魔法感 */
+  --kid-shadow-primary: 0 10px 40px rgba(255, 138, 92, 0.15);
+  --kid-shadow-magic: 0 10px 40px rgba(139, 92, 246, 0.15);
+
+  /* 兼容旧变量名 */
+  --background: var(--kid-background);
+  --foreground: var(--kid-text-primary);
+  --kid-bg: var(--kid-background);
+  --kid-bg-alt: var(--kid-card-alt);
+  --kid-muted: var(--kid-text-muted);
+  --kid-muted-soft: var(--kid-text-placeholder);
+  --kid-card: var(--kid-card-bg);
+  --kid-card-border: var(--kid-border-light);
+  --kid-shadow: var(--kid-shadow-primary);
   --kid-radius: 1.5rem;
   --kid-radius-xl: 1.875rem;
   --kid-tap: 56px;
@@ -22,41 +57,48 @@
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-kid-primary: #ea580c;
-  --color-kid-primary-soft: #fb923c;
-  --color-kid-muted: #78716c;
-  --color-kid-secondary: #2dd4bf;
-  --color-kid-accent: #c45c8a;
+  --color-background: var(--kid-background);
+  --color-foreground: var(--kid-text-primary);
+  --color-kid-primary: #FF8A5C;
+  --color-kid-primary-soft: #FFE4D6;
+  --color-kid-magic: #8B5CF6;
+  --color-kid-magic-light: #A78BFA;
+  --color-kid-muted: var(--kid-text-muted);
+  --color-kid-muted-soft: var(--kid-text-placeholder);
+  --color-kid-secondary: #10B981;
+  --color-kid-accent: #FDA4AF;
+  --color-kid-star: #FBBF24;
+  --shadow-kid-magic: var(--kid-shadow-magic);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* 根与 body 使用魔法背景，避免被 Tailwind 预检覆盖 */
+html,
 body {
-  background: var(--kid-bg);
-  color: var(--foreground);
+  background: var(--kid-background) !important;
+  color: var(--kid-text-primary);
   font-family: var(--font-sans), "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 1.125rem;
   -webkit-font-smoothing: antialiased;
 }
 
-/* 儿童向卡片：超大圆角、明显阴影、温馨白 */
+/* 儿童向卡片：超大圆角、魔法阴影 */
 .kid-card {
-  background: var(--kid-card);
+  background: var(--kid-card-bg);
   border-radius: var(--kid-radius-xl);
-  border: 2px solid var(--kid-card-border);
-  box-shadow: var(--kid-shadow);
+  border: 2px solid var(--kid-border-light);
+  box-shadow: var(--kid-shadow-primary);
   padding: 1.5rem;
 }
 
 .kid-page {
   min-height: 100vh;
   padding: 1.5rem 1rem 2rem;
-  background: linear-gradient(180deg, var(--kid-bg) 0%, var(--kid-bg-alt) 100%);
+  background: var(--kid-background) !important;
 }
 
-/* 主按钮：高 14/16、点击 scale-95 */
+/* 主按钮：紫橙渐变 + 魔法光效 */
 .kid-btn-primary {
   display: inline-flex;
   align-items: center;
@@ -66,15 +108,31 @@ body {
   font-weight: 600;
   font-size: 1.0625rem;
   color: #fff;
-  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, var(--kid-primary) 0%, var(--kid-magic) 100%);
   border: none;
   border-radius: var(--kid-radius);
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--kid-shadow-primary);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 .kid-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+  box-shadow: var(--kid-shadow-magic);
+}
+.kid-btn-primary:hover::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+  animation: shine 3s linear infinite;
+}
+@keyframes shine {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 .kid-btn-primary:active {
   transform: scale(0.95);
@@ -83,6 +141,17 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+.kid-btn-primary:disabled::after {
+  display: none;
+}
+.kid-btn-primary:focus-visible,
+.kid-btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.4);
+}
+.kid-btn-secondary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
 }
 
 /* 次按钮 */
@@ -101,8 +170,8 @@ body {
   transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 .kid-btn-secondary:hover {
-  background: var(--kid-bg-alt);
-  color: #c2410c;
+  background: var(--kid-card-alt);
+  color: var(--kid-primary-dark);
 }
 .kid-btn-secondary:active {
   transform: scale(0.95);
@@ -123,28 +192,44 @@ body {
 }
 .kid-input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+}
+.kid-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.35);
 }
 .kid-input::placeholder {
-  color: var(--kid-muted);
+  color: var(--kid-text-placeholder);
 }
 
-/* 标题：圆润字体 */
+/* 标题：圆润字体 + 魔法主色 */
 .kid-title {
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 700;
-  color: #ea580c;
+  color: var(--kid-primary);
   letter-spacing: -0.02em;
 }
 .kid-heading {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--kid-text-primary);
+  line-height: 1.35;
 }
 .kid-muted {
-  color: var(--kid-muted);
+  color: var(--kid-text-muted);
   font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.kid-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--kid-text-primary);
+}
+.kid-caption {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--kid-text-muted);
 }
 
 /* 阅读用字体（预览页） */
@@ -157,7 +242,7 @@ body {
   width: 5rem;
   height: 5rem;
   flex-shrink: 0;
-  background: var(--kid-bg-alt);
+  background: var(--kid-card-alt);
 }
 
 /* 预览页翻页动画 */
@@ -200,23 +285,83 @@ body {
 }
 .animate-pen-draw { animation: pen-draw 2.5s ease-in-out infinite; }
 
-/* 选中卡片跳动 */
+/* 选中卡片跳动（迪士尼式轻微弹跳，不过分） */
 @keyframes card-bounce {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  50% { transform: scale(1.02); }
 }
-.animate-card-bounce { animation: card-bounce 1.5s ease-in-out infinite; }
+.animate-card-bounce { animation: card-bounce 2s ease-in-out infinite; }
+
+/* 加载指示：圆点旋转 */
+@keyframes kid-spin {
+  to { transform: rotate(360deg); }
+}
+.kid-spinner {
+  width: 1.25em;
+  height: 1.25em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: kid-spin 0.7s linear infinite;
+}
 
 /* 兼容旧类名 */
 .comic-card {
-  background: var(--kid-card);
+  background: var(--kid-card-bg);
   border-radius: var(--kid-radius-xl);
-  border: 2px solid var(--kid-card-border);
-  box-shadow: var(--kid-shadow);
+  border: 2px solid var(--kid-border-light);
+  box-shadow: var(--kid-shadow-primary);
   padding: 1.5rem;
 }
-.comic-btn-primary { min-height: var(--kid-tap); padding: 0.75rem 1.5rem; font-weight: 600; font-size: 1.0625rem; color: #fff; background: linear-gradient(180deg, #f97316 0%, #ea580c 100%); border: none; border-radius: var(--kid-radius); box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35); }
+.comic-btn-primary { min-height: var(--kid-tap); padding: 0.75rem 1.5rem; font-weight: 600; font-size: 1.0625rem; color: #fff; background: linear-gradient(135deg, var(--kid-primary) 0%, var(--kid-magic) 100%); border: none; border-radius: var(--kid-radius); box-shadow: var(--kid-shadow-primary); }
 .comic-btn-secondary { min-height: var(--kid-tap); padding: 0.75rem 1.5rem; font-weight: 600; font-size: 1rem; color: var(--kid-primary); background: #fff; border: 2px solid var(--kid-primary-soft); border-radius: var(--kid-radius); }
-.comic-page { min-height: 100vh; padding: 1.5rem 1rem 2rem; background: linear-gradient(180deg, var(--kid-bg) 0%, var(--kid-bg-alt) 100%); }
-.comic-title { font-size: 1.75rem; font-weight: 700; color: #ea580c; }
+.comic-page { min-height: 100vh; padding: 1.5rem 1rem 2rem; background: var(--kid-background); }
+.comic-title { font-size: 1.75rem; font-weight: 700; color: var(--kid-primary); }
 .comic-input { width: 100%; min-height: 3rem; padding: 0.75rem 1rem; font-size: 1.125rem; background: #fff; border: none; border-radius: var(--kid-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+/* ========== 魔法光效与粒子动画 ========== */
+@keyframes magic-glow {
+  0%, 100% { opacity: 0.6; filter: blur(8px); }
+  50% { opacity: 1; filter: blur(12px); }
+}
+@keyframes float-particle {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(-100px) translateX(20px); opacity: 0; }
+}
+.animate-magic-glow {
+  animation: magic-glow 3s ease-in-out infinite;
+}
+.animate-float-particle {
+  animation: float-particle 8s linear infinite;
+}
+
+/* 毛玻璃卡片 */
+.kid-glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--kid-radius);
+}
+
+/* 对话气泡标签（用于创作页） */
+.bubble-label {
+  background: var(--kid-magic-light);
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 2rem;
+  position: relative;
+  margin-bottom: 0.5rem;
+  display: inline-block;
+  font-size: 1rem;
+  box-shadow: var(--kid-shadow-magic);
+}
+.bubble-label::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 20px;
+  border-width: 8px 8px 0;
+  border-style: solid;
+  border-color: var(--kid-magic-light) transparent transparent;
+}

@@ -6,6 +6,7 @@ import { PDFDownloadLink, Document, Page, Text, Image, View } from '@react-pdf/r
 import JSZip from 'jszip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pdfFontFamily } from '../../lib/pdf-fonts';
+import FloatingToolbar from '@/components/FloatingToolbar';
 
 interface PageData {
   index: number;
@@ -15,13 +16,17 @@ interface PageData {
 
 const pageVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 60 : -60,
+    x: direction > 0 ? 56 : -56,
     opacity: 0,
+    scale: 0.98,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
   }),
-  center: { x: 0, opacity: 1 },
+  center: { x: 0, opacity: 1, scale: 1, boxShadow: 'var(--kid-shadow-magic)' },
   exit: (direction: number) => ({
-    x: direction > 0 ? -60 : 60,
+    x: direction > 0 ? -56 : 56,
     opacity: 0,
+    scale: 0.98,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
   }),
 };
 
@@ -31,7 +36,19 @@ export default function PreviewPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [direction, setDirection] = useState(0);
   const [shareStatus, setShareStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [moreOpen, setMoreOpen] = useState(false);
   const textEditRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const threshold = 50;
+    if (dx > threshold) goPrev();
+    else if (dx < -threshold) goNext();
+  };
 
   useEffect(() => {
     const data = sessionStorage.getItem('fullStory');
@@ -39,16 +56,30 @@ export default function PreviewPage() {
       router.push('/create');
       return;
     }
-    setFullStory(JSON.parse(data));
+    try {
+      const raw = JSON.parse(data) as { title?: string; pages?: PageData[] };
+      if (!raw?.pages?.length) {
+        router.push('/create');
+        return;
+      }
+      const normalized = {
+        title: raw.title || '我的绘本',
+        pages: raw.pages,
+      };
+      setFullStory(normalized);
+    } catch {
+      router.push('/create');
+    }
   }, [router]);
 
   const savePageText = useCallback(
     (pageIndex: number, newText: string) => {
-      if (!fullStory) return;
+      if (!fullStory?.pages?.length) return;
+      const safeIndex = Math.max(0, Math.min(pageIndex, fullStory.pages.length - 1));
       const updated = {
         ...fullStory,
         pages: fullStory.pages.map((p, i) =>
-          i === pageIndex ? { ...p, text: newText } : p
+          i === safeIndex ? { ...p, text: newText } : p
         ),
       };
       setFullStory(updated);
@@ -172,7 +203,16 @@ export default function PreviewPage() {
     );
   }
 
-  const page = fullStory.pages[currentPage];
+  const safePageIndex = Math.max(0, Math.min(currentPage, fullStory.pages.length - 1));
+  const page = fullStory.pages[safePageIndex];
+  if (!page) {
+    return (
+      <div className="kid-page flex items-center justify-center min-h-screen">
+        <p className="kid-muted font-medium">暂无页面数据</p>
+        <button type="button" onClick={() => router.push('/')} className="kid-btn-secondary mt-4">返回首页</button>
+      </div>
+    );
+  }
 
   const PDFDoc = () => (
     <Document>
@@ -196,7 +236,11 @@ export default function PreviewPage() {
       <div className="mx-auto max-w-xl">
         <h1 className="kid-title text-xl sm:text-2xl mb-6 text-center">{fullStory.title}</h1>
 
-        <div className="mb-6">
+        <div
+          className="mb-6 touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={currentPage}
@@ -205,17 +249,18 @@ export default function PreviewPage() {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ type: 'tween', duration: 0.3 }}
-              className="kid-card shadow-lg rounded-3xl overflow-hidden"
+              transition={{ type: 'tween', duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }}
+              className="kid-card rounded-3xl overflow-hidden"
+              style={{ boxShadow: 'var(--kid-shadow-primary)' }}
             >
-              <div className="rounded-2xl overflow-hidden bg-amber-100/50">
+              <div className="rounded-2xl overflow-hidden bg-[var(--kid-primary-soft)]/50">
                 <img
                   src={page.imageUrl}
                   alt={`第${page.index + 1}页`}
                   className="w-full block"
                 />
               </div>
-              <div className="kid-paper rounded-2xl mt-3 p-4 min-h-[5rem] border-2 border-amber-200/60 shadow-inner">
+              <div className="kid-paper rounded-2xl mt-3 p-4 min-h-[5rem] border-2 border-[var(--kid-border-light)] shadow-inner">
                 <p className="kid-muted text-xs mb-2">点击文字可编辑</p>
                 <div
                   ref={textEditRef}
@@ -243,7 +288,7 @@ export default function PreviewPage() {
             ← 上一页
           </button>
           <span className="kid-muted font-semibold text-lg">
-            {currentPage + 1} / {fullStory.pages.length}
+            第 {currentPage + 1} 页 / 共 {fullStory.pages.length} 页
           </span>
           <button
             type="button"
@@ -256,75 +301,148 @@ export default function PreviewPage() {
         </div>
       </div>
 
-      {/* 底部悬浮泡泡操作栏 */}
-      <div className="fixed bottom-6 left-0 right-0 flex justify-center gap-3 px-4 z-20">
-        <div className="flex flex-wrap justify-center gap-3 max-w-lg">
-          <PDFDownloadLink document={<PDFDoc />} fileName={`${fullStory.title}.pdf`}>
-            {({ loading }) => (
+      {/* 底部操作栏：桌面全展示，移动端主操作 +「更多」折叠 */}
+      <nav
+        className="fixed bottom-6 left-0 right-0 flex justify-center px-4 z-20"
+        aria-label="绘本操作"
+      >
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-wrap justify-center gap-2 max-w-lg bg-white/95 backdrop-blur-sm rounded-full py-2 px-4 shadow-lg border border-[var(--kid-border-light)]">
+            <PDFDownloadLink document={<PDFDoc />} fileName={`${fullStory.title}.pdf`}>
+              {({ loading }) => (
+                <motion.button
+                  type="button"
+                  disabled={loading}
+                  className="w-12 h-12 rounded-full bg-[var(--kid-primary)] text-white shadow-md flex items-center justify-center text-lg hover:opacity-90 disabled:opacity-70 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--kid-primary)]"
+                  whileHover={{ scale: loading ? 1 : 1.06 }}
+                  whileTap={{ scale: 0.96 }}
+                  title={loading ? '生成中…' : '导出 PDF'}
+                  aria-label={loading ? '正在生成 PDF' : '导出 PDF'}
+                >
+                  {loading ? <span className="animate-pulse">⋯</span> : '📄'}
+                </motion.button>
+              )}
+            </PDFDownloadLink>
+            <motion.button
+              type="button"
+              onClick={handleShare}
+                className="w-12 h-12 rounded-full bg-[var(--kid-magic)] text-white shadow-md flex items-center justify-center text-lg hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--kid-magic)]"
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              title={shareStatus === 'success' ? '已分享' : shareStatus === 'error' ? '已复制到剪贴板' : '分享'}
+              aria-label={shareStatus === 'success' ? '已分享' : shareStatus === 'error' ? '链接已复制' : '分享绘本'}
+            >
+              {shareStatus === 'success' ? '✓' : shareStatus === 'error' ? '📋' : '📤'}
+            </motion.button>
+            {/* 移动端折叠：打印、当前页、ZIP */}
+            <div className="hidden sm:flex gap-2">
               <motion.button
                 type="button"
-                disabled={loading}
-                className="w-14 h-14 rounded-full bg-orange-500 text-white shadow-lg flex items-center justify-center text-xl hover:bg-orange-600 disabled:opacity-70"
-                whileHover={{ scale: loading ? 1 : 1.08 }}
-                whileTap={{ scale: 0.95 }}
-                title={loading ? '生成中…' : '导出 PDF'}
+                onClick={handlePrint}
+                className="w-12 h-12 rounded-full bg-[var(--kid-star)] text-white shadow-md flex items-center justify-center text-lg hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--kid-star)]"
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.96 }}
+                title="打印"
+                aria-label="打印绘本"
               >
-                {loading ? <span className="animate-pulse">⋯</span> : '📄'}
+                🖨️
               </motion.button>
-            )}
-          </PDFDownloadLink>
-          <motion.button
-            type="button"
-            onClick={handleShare}
-            className="w-14 h-14 rounded-full bg-teal-400 text-white shadow-lg flex items-center justify-center text-xl hover:bg-teal-500"
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
-            title={shareStatus === 'success' ? '已分享' : shareStatus === 'error' ? '已复制' : '分享'}
-          >
-            {shareStatus === 'success' ? '✓' : shareStatus === 'error' ? '📋' : '📤'}
-          </motion.button>
-          <motion.button
-            type="button"
-            onClick={handlePrint}
-            className="w-14 h-14 rounded-full bg-amber-400 text-white shadow-lg flex items-center justify-center text-xl hover:bg-amber-500"
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
-            title="打印"
-          >
-            🖨️
-          </motion.button>
-          <motion.button
-            type="button"
-            onClick={downloadCurrentImage}
-            className="w-14 h-14 rounded-full bg-rose-400 text-white shadow-lg flex items-center justify-center text-xl hover:bg-rose-500"
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
-            title="下载当前页"
-          >
-            🖼️
-          </motion.button>
-          <motion.button
-            type="button"
-            onClick={downloadAllImagesAsZip}
-            className="w-14 h-14 rounded-full bg-violet-400 text-white shadow-lg flex items-center justify-center text-xl hover:bg-violet-500"
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
-            title="全部图片 ZIP"
-          >
-            📦
-          </motion.button>
-          <motion.button
-            type="button"
-            onClick={() => router.push('/')}
-            className="w-14 h-14 rounded-full bg-stone-500 text-white shadow-lg flex items-center justify-center text-xl hover:bg-stone-600"
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
-            title="返回首页"
-          >
-            🏠
-          </motion.button>
+              <motion.button
+                type="button"
+                onClick={downloadCurrentImage}
+                className="w-12 h-12 rounded-full bg-[var(--kid-primary)] text-white shadow-md flex items-center justify-center text-lg hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--kid-primary)]"
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.96 }}
+                title="下载当前页图片"
+                aria-label="下载当前页图片"
+              >
+                🖼️
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={downloadAllImagesAsZip}
+                className="w-12 h-12 rounded-full bg-[var(--kid-magic)] text-white shadow-md flex items-center justify-center text-lg hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--kid-magic)]"
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.96 }}
+                title="下载全部图片（ZIP）"
+                aria-label="下载全部图片为 ZIP"
+              >
+                📦
+              </motion.button>
+            </div>
+            <div className="sm:hidden relative">
+              <motion.button
+                type="button"
+                onClick={() => setMoreOpen((o) => !o)}
+                className="w-12 h-12 rounded-full bg-[var(--kid-magic-light)] text-white shadow-md flex items-center justify-center text-lg hover:opacity-90 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--kid-magic-light)]"
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.96 }}
+                title="更多操作"
+                aria-label="更多操作"
+                aria-expanded={moreOpen}
+              >
+                ⋯
+              </motion.button>
+              {moreOpen && (
+                <>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex gap-2 py-2 px-3 bg-white rounded-2xl shadow-lg border border-[var(--kid-border-light)] z-[20]">
+                    <motion.button
+                      type="button"
+                      onClick={() => { handlePrint(); setMoreOpen(false); }}
+                      className="w-10 h-10 rounded-full bg-[var(--kid-star)] text-white flex items-center justify-center text-sm"
+                      title="打印"
+                      aria-label="打印"
+                    >
+                      🖨️
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      onClick={() => { downloadCurrentImage(); setMoreOpen(false); }}
+                      className="w-10 h-10 rounded-full bg-[var(--kid-primary)] text-white flex items-center justify-center text-sm"
+                      title="下载当前页"
+                      aria-label="下载当前页"
+                    >
+                      🖼️
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      onClick={() => { downloadAllImagesAsZip(); setMoreOpen(false); }}
+                      className="w-10 h-10 rounded-full bg-[var(--kid-magic-light)] text-white flex items-center justify-center text-sm"
+                      title="全部 ZIP"
+                      aria-label="下载全部图片 ZIP"
+                    >
+                      📦
+                    </motion.button>
+                  </div>
+                  <button
+                    type="button"
+                    className="fixed inset-0 z-[18]"
+                    aria-label="关闭更多"
+                    onClick={() => setMoreOpen(false)}
+                  />
+                </>
+              )}
+            </div>
+            <motion.button
+              type="button"
+              onClick={() => router.push('/')}
+              className="w-12 h-12 rounded-full bg-stone-500 text-white shadow-md flex items-center justify-center text-lg hover:bg-stone-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-stone-500"
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              title="返回首页"
+              aria-label="返回首页"
+            >
+              🏠
+            </motion.button>
+          </div>
         </div>
-      </div>
+      </nav>
+
+      <FloatingToolbar
+        onPrint={handlePrint}
+        onDownload={downloadCurrentImage}
+        onShare={handleShare}
+      />
     </div>
   );
 }

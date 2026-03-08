@@ -43,7 +43,5 @@ next-env.d.ts
 gcs-key.json
 vision-key.json
 
-# Python 视觉服务本地虚拟环境（避免 Next 构建解析 venv 符号链接）
-vision-service/venv
-vision-service/.venv
-vision-service/__pycache__
+# 本地上传目录（不提交用户上传文件）
+public/uploads

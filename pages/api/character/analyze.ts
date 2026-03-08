@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import fs from 'fs';
 import { analyzeBatchFromBuffers } from '@/lib/vision-python';
+import { normalizeImageToJpeg } from '@/lib/image-utils';
 
 export const config = {
   api: { bodyParser: false },
@@ -45,23 +46,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: '请上传一张图片（字段名 image）' });
   }
 
-  const buffer = fs.readFileSync(entry.filepath);
+  const rawBuffer = fs.readFileSync(entry.filepath);
   try {
     fs.unlinkSync(entry.filepath);
   } catch {
     // ignore
   }
 
+  let buffer: Buffer;
+  let normalizedFilename: string;
+  let normalizedContentType: string;
+  try {
+    const normalized = await normalizeImageToJpeg(
+      rawBuffer,
+      entry.mimetype,
+      entry.originalFilename
+    );
+    buffer = normalized.buffer;
+    normalizedFilename = normalized.filename;
+    normalizedContentType = normalized.contentType;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const fallbackSummary = msg.includes('HEIC') ? msg : 'AI 分析暂不可用，请手动补充角色描述';
+    return res.status(200).json({
+      summary: fallbackSummary,
+      labels: [],
+      details: [
+        { filename: entry.originalFilename, labels: [], summary: fallbackSummary },
+      ],
+    });
+  }
+
   const result = await analyzeBatchFromBuffers(
-    [{ buffer, filename: entry.originalFilename, contentType: entry.mimetype }],
+    [{ buffer, filename: normalizedFilename, contentType: normalizedContentType }],
     { context: 'avatar' }
   );
 
   if (!result.success || !result.data) {
     console.error('character/analyze vision error:', result.error);
-    return res.status(503).json({
-      error: 'VISION_SERVICE_UNAVAILABLE',
-      message: '视觉服务不可用，请先启动 vision-service。',
+    const fallbackSummary = result.error || 'AI 分析暂不可用，请手动补充角色描述';
+    return res.status(200).json({
+      summary: fallbackSummary,
+      labels: [],
+      details: [
+        {
+          filename: normalizedFilename,
+          labels: [],
+          summary: fallbackSummary,
+        },
+      ],
     });
   }
 

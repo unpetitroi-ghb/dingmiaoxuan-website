@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
+    "start:server": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint"
   },
   "dependencies": {
@@ -20,12 +21,14 @@
     "framer-motion": "^12.34.3",
     "heic2any": "^0.0.4",
     "jszip": "^3.10.1",
+    "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "prisma": "^5.22.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-dropzone": "^15.0.0",
     "react-pdf": "^10.4.1",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.5.0",
     "uuid": "^13.0.0"
   },
