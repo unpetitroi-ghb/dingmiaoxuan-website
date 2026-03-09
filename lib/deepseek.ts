@@ -1,323 +1,150 @@
-import axios from 'axios';
-
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY!;
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-
-export interface StoryParams {
-  characterName: string;
-  characterTraits: string;
-  theme: string;
-  style: string;
-}
-
-export interface StoryResult {
-  title: string;
-  pages: { text: string; description: string }[];
-}
-
-export async function generateStory(params: StoryParams): Promise<StoryResult> {
-  const prompt = `
-你是一个儿童绘本作家。请为一个叫“${params.characterName}”的孩子创作一个6页的绘本故事。
-故事主题：${params.theme}
-主角外貌：${params.characterTraits}
-艺术风格：${params.style}
-
-要求：
-- 每页文字简单活泼，适合3-10岁儿童。
-- 故事要有积极的意义。
-- 输出格式为JSON，包含 title 和 pages 数组，每个page包含 text（故事文字）和 description（画面描述，用于AI绘画）。
-  `;
-
-  const response = await axios.post(
-    DEEPSEEK_API_URL,
-    {
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  const content = response.data.choices[0].message.content;
-  return JSON.parse(content) as StoryResult;
-}
-
-export interface ComicScriptParams {
-  characterName: string;
-  /** 旧：纯文本描述 */
-  imageAnalysisDescription?: string;
-  /** 新：万物识别结果（summary + labels） */
-  imageAnalysis?: { summary: string; labels: string[] };
-  userStoryIdea: string;
-  style: string;
-  pageCount?: number;
-}
-
-export interface ComicScriptResult {
-  title: string;
-  pages: { text: string; description: string }[];
-}
-
 /**
- * 基于图片分析生成漫画脚本和分镜（每页 text + description）
+ * DeepSeek — 生成绘本脚本（分镜文字 + 画面描述）
  */
-export async function generateComicScript(params: ComicScriptParams): Promise<ComicScriptResult> {
-  const pageCount = params.pageCount ?? 6;
-  const analysisText = params.imageAnalysis
-    ? `【照片分析】${params.imageAnalysis.summary}\n【图片标签】${(params.imageAnalysis.labels || []).slice(0, 10).join('、')}`
-    : `【照片分析】${params.imageAnalysisDescription ?? '用户上传了照片，请结合用户创意创作。'}`;
 
-  const prompt = `
-你是一个专业的漫画编剧和分镜师。请根据以下信息创作一个${pageCount}页的短篇漫画。
+const DEEPSEEK_BASE = 'https://api.deepseek.com/v1';
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY ?? '';
 
-【主角名称】${params.characterName}
-${analysisText}
-【用户创意】${params.userStoryIdea}
-【漫画风格】${params.style}
-
-要求：
-- 每页包含一句简短的台词或旁白（text），以及详细的画面描述（description，用于AI绘画）。
-- 故事要有起承转合，适合儿童阅读。
-- 输出格式为JSON，包含 title 和 pages 数组，每个元素包含 text 和 description。
-  `;
-
-  const response = await axios.post(
-    DEEPSEEK_API_URL,
-    {
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  const content = response.data.choices[0].message.content;
-  return JSON.parse(content) as ComicScriptResult;
+export interface ScriptPage {
+  text: string;         // 绘本正文（孩子读的那句话）
+  description: string;  // 画面描述（给即梦用的 prompt）
 }
 
-/** 多图线索分析结果的一项 */
-export interface ClueAnalysisItem {
-  url: string;
-  summary?: string;
-  labels?: string[];
-}
-
-/** V5：推荐的寓教于乐方向 */
-export interface RecommendedTheme {
+export interface BookScript {
   title: string;
-  summary: string;
-  moral_lesson?: string;
+  pages: ScriptPage[];
 }
 
-/** 角色简要信息（用于汇总故事概要） */
-export interface CharacterSummaryForStory {
-  name: string;
-  summary?: string;
-  labels?: string[];
-}
-
-/** 根据多图分析 + 角色信息，汇总成故事概要并推荐 3 个寓教于乐方向 */
-export async function generateStorySummaryAndThemes(
-  clueAnalysis: ClueAnalysisItem[],
-  characterInfos: CharacterSummaryForStory[]
-): Promise<{ storySummary: string; themes: RecommendedTheme[] }> {
-  const cluesText = clueAnalysis
-    .map((c, i) => `图${i + 1}：${c.summary || '（无描述）'}；标签：${(c.labels || []).join('、')}`)
-    .join('\n');
-  const charsText =
-    characterInfos.length > 0
-      ? characterInfos
-          .map(
-            (c) =>
-              `角色「${c.name}」：${c.summary || ''}；标签：${(c.labels || []).slice(0, 8).join('、')}`
-          )
-          .join('\n')
-      : '（未指定角色）';
-
-  const prompt = `
-你是一位儿童绘本策划。请根据用户上传的多张图片分析结果，以及用户定义的角色信息，完成两件事：
-
-1）用 2～4 句话写一个「故事概要」，概括这些图片和角色可能组成的故事（适合 3～10 岁儿童，温馨、有画面感）。
-2）根据这个故事概要，推荐 3 个不同的「寓教于乐」方向（例如：友情、勇气、分享、成长、家庭等），每个方向要有标题、一两句梗概、以及简短的教育意义。
-
-【每张图的分析】
-${cluesText}
-
-【用户定义的角色】
-${charsText}
-
-要求：
-- 输出 JSON：{ "storySummary": "故事概要的 2～4 句话", "themes": [ { "title": "方向标题", "summary": "一两句梗概", "moral_lesson": "教育意义" }, ... ] }
-- 3 个方向要有明显差异，moral_lesson 简短正面。
-  `;
-
-  const response = await axios.post(
-    DEEPSEEK_API_URL,
-    {
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  const data = JSON.parse(response.data.choices[0].message.content) as {
-    storySummary?: string;
-    themes?: RecommendedTheme[];
+export interface GenerateScriptParams {
+  characterName: string;
+  characterLabel: string;
+  characterDescription: string;
+  sceneAnalysis: {
+    scenes: string[];
+    activities: string[];
+    mood: string;
+    summary: string;
   };
-  const storySummary =
-    typeof data.storySummary === 'string' ? data.storySummary : '根据你的图片和角色，将诞生一个温馨的小故事。';
-  const themes = Array.isArray(data.themes) ? data.themes.slice(0, 3) : [];
-  return { storySummary, themes };
-}
-
-/** V5：根据故事概要/选定方向与线索生成分镜脚本 */
-export async function generateScriptForStory(params: {
-  clueAnalysis: ClueAnalysisItem[];
-  selectedTheme: string;
-  moral_lesson?: string;
-  characterNames: string[];
-  pageCount?: number;
-  /** 用户编辑后的故事概要，若提供则优先基于概要写脚本 */
-  storySummary?: string;
-}): Promise<ComicScriptResult> {
-  const pageCount = params.pageCount ?? 6;
-  const cluesText = params.clueAnalysis
-    .map((c, i) => `图${i + 1}：${c.summary || ''}；${(c.labels || []).join('、')}`)
-    .join('\n');
-
-  const summaryBlock = params.storySummary
-    ? `【故事概要（用户确认）】\n${params.storySummary}\n\n`
-    : '';
-
-  const prompt = `
-你是儿童漫画编剧。根据下面的故事概要/方向与线索，创作一个 ${pageCount} 页的短篇漫画脚本。
-${summaryBlock}【线索图分析】
-${cluesText}
-
-【选定方向】${params.selectedTheme}
-【教育意义】${params.moral_lesson || '积极向上'}
-【出场角色】${params.characterNames.join('、')}
-
-要求：
-- 输出 JSON：{ "title": "绘本标题", "pages": [ { "text": "本页旁白/台词", "description": "本页画面描述（用于AI绘画）" }, ... ] }
-- 每页 text 简短，description 详细便于绘图。
-- 故事完整、适合儿童，体现教育意义。
-  `;
-
-  const response = await axios.post(
-    DEEPSEEK_API_URL,
-    {
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  const content = response.data.choices[0].message.content;
-  return JSON.parse(content) as ComicScriptResult;
-}
-
-// ── generateStructuredScript（供 generate-script API 使用） ──────────────────
-
-export interface StructuredScriptParams {
-  character_description: string;
-  character_name: string;
-  story_idea: string;
+  storyTheme: string;
+  educationalTheme?: string;
   style: string;
   pageCount: number;
 }
 
-export interface StructuredScriptResult {
-  title?: string;
-  theme?: string;
-  targetAge?: string;
-  style?: string;
-  characterProfile?: {
-    name?: string;
-    coreTraits?: string[];
-    visualConsistency?: string;
-  };
-  pages?: Record<string, unknown>[];
-}
+export async function generateBookScript(params: GenerateScriptParams): Promise<BookScript> {
+  if (!DEEPSEEK_API_KEY) throw new Error('未配置 DEEPSEEK_API_KEY');
 
-/**
- * 生成结构化绘本脚本（每页含 imagePrompt、caption、dialogue、visualChecklist）
- * 供 /api/generate-script 接口调用
- */
-export async function generateStructuredScript(
-  params: StructuredScriptParams
-): Promise<StructuredScriptResult> {
-  const prompt = `
-你是一位专业的儿童绘本编剧。请根据以下信息，创作一个 ${params.pageCount} 页的儿童绘本脚本。
+  const {
+    characterName, characterLabel, characterDescription,
+    sceneAnalysis, storyTheme, educationalTheme, style, pageCount,
+  } = params;
 
-【角色名称】${params.character_name}
-【角色描述】${params.character_description}
-【故事创意】${params.story_idea || '一段温馨有趣的冒险'}
-【绘本风格】${params.style}
+  const educationalPart = educationalTheme
+    ? `\n- 故事中自然融入关于"${educationalTheme}"的知识点，寓教于乐，不说教`
+    : '';
 
-请输出 JSON 格式，结构如下：
+  const systemPrompt = `你是一位专业的儿童绘本作家，擅长创作温馨、有趣、有教育意义的家庭故事。
+你的故事特点：文字简洁，每页1-2句话，孩子能读懂；画面描述具体生动，能直接用于AI绘画；情节递进自然，结局温馨积极。`;
+
+  const userPrompt = `请根据以下信息，创作一个${pageCount}页的儿童绘本故事：
+
+【主角】${characterName}（${characterLabel}），外貌：${characterDescription}
+
+【今天发生的事】
+${sceneAnalysis.summary}
+场景：${sceneAnalysis.scenes.join('、')}
+活动：${sceneAnalysis.activities.join('、')}
+氛围：${sceneAnalysis.mood}
+
+【故事主题】${storyTheme}${educationalPart}
+【绘画风格】${style}风格，儿童绘本插画
+
+以JSON格式返回（不加代码块标记）：
 {
-  "title": "绘本标题",
-  "theme": "故事主题（如：友情、勇气、成长）",
-  "targetAge": "目标年龄段（如：3-8岁）",
-  "style": "${params.style}",
-  "characterProfile": {
-    "name": "${params.character_name}",
-    "coreTraits": ["性格特征1", "性格特征2"],
-    "visualConsistency": "角色视觉描述（供每页 prompt 插入）"
-  },
+  "title": "故事标题，10字以内，有诗意",
   "pages": [
     {
-      "pageNo": 1,
-      "sceneTitle": "本页场景标题",
-      "imagePrompt": "详细的画面描述（供 AI 绘图）",
-      "caption": "本页旁白/文字（简短，适合儿童）",
-      "dialogue": "角色对话（可为空字符串）",
-      "visualChecklist": ["画面必须包含的元素1", "元素2"]
+      "text": "绘本正文，每页1-2句话，15-30字，适合孩子朗读",
+      "description": "画面描述，50字以内，说明场景、人物动作、表情、背景，直接用于AI绘图，不含文字标注"
     }
   ]
 }
 
-要求：pages 包含 ${params.pageCount} 页，故事完整有起承转合，caption 不超过 30 字，教育意义积极正面。
-`;
+要求：pages 必须有${pageCount}个元素，故事完整起承转合，主角外貌在每页保持一致。`;
 
-  const response = await axios.post(
-    DEEPSEEK_API_URL,
-    {
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
+  const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
     },
-    {
-      headers: {
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: 3000,
+      temperature: 0.85,
+    }),
+  });
 
-  const content = response.data.choices[0].message.content as string;
-  return JSON.parse(content) as StructuredScriptResult;
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`DeepSeek 生成失败 (${res.status}): ${err.slice(0, 300)}`);
+  }
+
+  const data = await res.json() as { choices?: { message?: { content?: string } }[] };
+  const text = data.choices?.[0]?.message?.content ?? '';
+
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('未找到JSON');
+    const result = JSON.parse(jsonMatch[0]) as BookScript;
+    if (!result.pages?.length) throw new Error('脚本页数为0');
+    return result;
+  } catch (e) {
+    throw new Error(`脚本解析失败: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
+/** 根据场景分析推荐3个故事方向 */
+export async function suggestThemes(params: {
+  sceneAnalysis: { scenes: string[]; activities: string[]; mood: string };
+  characterName: string;
+}): Promise<string[]> {
+  if (!DEEPSEEK_API_KEY) {
+    return ['一次勇敢的探索冒险', '温暖的家人陪伴时光', '充满惊喜的快乐一天'];
+  }
+
+  const { sceneAnalysis, characterName } = params;
+
+  const prompt = `根据以下家庭活动，为儿童绘本推荐3个故事主题方向：
+场景：${sceneAnalysis.scenes.join('、')}
+活动：${sceneAnalysis.activities.join('、')}
+氛围：${sceneAnalysis.mood}，主角：${characterName}
+
+返回JSON数组，每个主题15字以内，有画面感和情感温度：["主题1","主题2","主题3"]`;
+
+  try {
+    const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 200,
+        temperature: 0.9,
+      }),
+    });
+    const data = await res.json() as { choices?: { message?: { content?: string } }[] };
+    const raw = data.choices?.[0]?.message?.content ?? '';
+    const match = raw.match(/\[[\s\S]*\]/);
+    if (match) return JSON.parse(match[0]) as string[];
+  } catch { /* fallback */ }
+
+  return ['一次勇敢的探索冒险', '温暖的家人陪伴时光', '充满惊喜的快乐一天'];
 }

@@ -1,184 +1,131 @@
-import axios from 'axios';
+/**
+ * 即梦 4.0 图片生成（火山引擎 HMAC 签名方式）
+ */
 import { Signer } from '@volcengine/openapi';
 
-// 使用与 Signer 内部完全一致的 query 编码，否则火山引擎会报 SignatureDoesNotMatch
-const volcSign = require('@volcengine/openapi/lib/base/sign') as { queryParamsToString: (p: Record<string, unknown>) => string };
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const volcSign = require('@volcengine/openapi/lib/base/sign') as {
+  queryParamsToString: (p: Record<string, unknown>) => string;
+};
 
 const VOLC_HOST = 'visual.volcengineapi.com';
 const VOLC_REGION = 'cn-north-1';
 const VOLC_SERVICE = 'cv';
 const REQ_KEY = 'jimeng_t2i_v40';
 
-const VOLC_ACCESSKEY = process.env.VOLC_ACCESSKEY ?? process.env.JIMENG_API_KEY ?? '';
-const VOLC_SECRETKEY = process.env.VOLC_SECRETKEY ?? process.env.JIMENG_SECRET_KEY ?? '';
+const VOLC_ACCESSKEY = process.env.VOLC_ACCESSKEY ?? '';
+const VOLC_SECRETKEY = process.env.VOLC_SECRETKEY ?? '';
 
-export interface ImageGenerationParams {
-  prompt: string;
-  style?: string;
-  referenceImageUrl?: string;
+export const STYLE_PROMPTS: Record<string, string> = {
+  '水彩绘本': '水彩插画风格，柔和温暖的色调，手绘质感，儿童绘本插画',
+  '日漫': '日式动漫风格，明亮活泼的色彩，精细线条，可爱卡通',
+  '3D卡通': '3D卡通渲染风格，圆润可爱，皮克斯动画风格，色彩丰富',
+  '中国风': '中国水墨画风格，传统美术，淡雅清新，温馨故事感',
+  '素描': '铅笔素描风格，黑白为主，细腻线条，温馨手绘感',
+};
+
+function signRequest(action: string, version: string, bodyStr: string) {
+  const params = { Action: action, Version: version };
+  const requestData = {
+    region: VOLC_REGION,
+    method: 'POST' as const,
+    params: { ...params },
+    headers: { 'Content-Type': 'application/json', Host: VOLC_HOST },
+    body: bodyStr,
+  };
+  const signer = new Signer(requestData, VOLC_SERVICE);
+  signer.addAuthorization({ accessKeyId: VOLC_ACCESSKEY, secretKey: VOLC_SECRETKEY });
+  const queryString = volcSign.queryParamsToString(requestData.params);
+  return { headers: requestData.headers as Record<string, string>, queryString };
 }
 
-function signRequest(
-  action: string,
-  version: string,
-  bodyStr: string
-): { headers: Record<string, string>; queryString: string } {
-  try {
-    const params = { Action: action, Version: version };
-    const requestData = {
-      region: VOLC_REGION,
-      method: 'POST' as const,
-      params: { ...params },
-      headers: {
-        'Content-Type': 'application/json',
-        Host: VOLC_HOST,
-      },
-      body: bodyStr,
-    };
-    const signer = new Signer(requestData, VOLC_SERVICE);
-    signer.addAuthorization({
-      accessKeyId: VOLC_ACCESSKEY,
-      secretKey: VOLC_SECRETKEY,
-    });
-    const queryString = volcSign.queryParamsToString(requestData.params);
-    return { headers: requestData.headers as Record<string, string>, queryString };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(`即梦签名失败: ${msg}`);
-  }
-}
-
-/** 提交即梦 4.0 异步任务，返回 task_id */
-async function submitTask(prompt: string, imageUrls?: string[]): Promise<string> {
+async function submitTask(prompt: string, referenceImageUrl?: string): Promise<string> {
   const body: Record<string, unknown> = {
     req_key: REQ_KEY,
     prompt,
     force_single: true,
   };
-  if (imageUrls?.length) {
-    body.image_urls = imageUrls;
-  }
+  if (referenceImageUrl) body.image_urls = [referenceImageUrl];
+
   const bodyStr = JSON.stringify(body);
+  const { headers, queryString } = signRequest('CVSync2AsyncSubmitTask', '2022-08-31', bodyStr);
 
-  const { headers, queryString } = signRequest(
-    'CVSync2AsyncSubmitTask',
-    '2022-08-31',
-    bodyStr
-  );
+  const res = await fetch(`https://${VOLC_HOST}?${queryString}`, {
+    method: 'POST',
+    headers,
+    body: bodyStr,
+  });
 
-  const url = `https://${VOLC_HOST}?${queryString}`;
-  let response;
-  try {
-    response = await axios.post(url, bodyStr, {
-      headers,
-      validateStatus: () => true,
-    });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(`即梦请求失败（网络或鉴权）: ${msg}`);
-  }
+  const data = await res.json() as Record<string, unknown>;
+  const err = (data?.ResponseMetadata as Record<string, unknown>)?.Error as Record<string, string> | undefined;
+  if (err?.Message) throw new Error(`即梦提交失败: ${err.Message}`);
 
-  const data = response.data;
-  const err = data?.ResponseMetadata?.Error;
-  if (err?.Message ?? err?.message) {
-    throw new Error(`即梦提交任务失败 (${err.Code ?? err.CodeN ?? 'Error'}): ${err.Message ?? err.message}`);
-  }
   const code = data?.code ?? data?.Code;
   if (code !== 10000 && code !== undefined) {
-    const msg = data?.message ?? data?.Message ?? JSON.stringify(data);
-    throw new Error(`即梦提交任务失败 (code=${code}): ${msg}`);
-  }
-  if (typeof data?.data !== 'object') {
-    throw new Error(`即梦返回格式异常: ${JSON.stringify(data)}`);
+    throw new Error(`即梦提交失败 (code=${String(code)}): ${String(data?.message ?? data?.Message ?? '')}`);
   }
 
-  const taskId = response.data?.data?.task_id;
-  if (!taskId) {
-    throw new Error(`即梦返回无 task_id: ${JSON.stringify(response.data)}`);
-  }
+  const taskId = (data?.data as Record<string, unknown>)?.task_id as string;
+  if (!taskId) throw new Error(`即梦未返回 task_id: ${JSON.stringify(data).slice(0, 200)}`);
   return taskId;
 }
 
-/** 查询即梦任务结果，返回 { status, image_urls? } */
-async function getResult(taskId: string): Promise<{
-  status: string;
-  image_urls?: string[];
-  message?: string;
-}> {
-  const body = {
-    req_key: REQ_KEY,
-    task_id: taskId,
-    req_json: JSON.stringify({ return_url: true }),
-  };
-  const bodyStr = JSON.stringify(body);
+async function queryTask(taskId: string): Promise<{ status: string; imageUrls?: string[] }> {
+  const body = JSON.stringify({ req_key: REQ_KEY, task_id: taskId, req_json: JSON.stringify({ return_url: true }) });
+  const { headers, queryString } = signRequest('CVSync2AsyncGetResult', '2022-08-31', body);
 
-  const { headers, queryString } = signRequest(
-    'CVSync2AsyncGetResult',
-    '2022-08-31',
-    bodyStr
-  );
+  const res = await fetch(`https://${VOLC_HOST}?${queryString}`, {
+    method: 'POST',
+    headers,
+    body,
+  });
 
-  const url = `https://${VOLC_HOST}?${queryString}`;
-  let response;
-  try {
-    response = await axios.post(url, bodyStr, {
-      headers,
-      validateStatus: () => true,
-    });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(`即梦查询请求失败: ${msg}`);
-  }
+  const data = await res.json() as Record<string, unknown>;
+  const err = (data?.ResponseMetadata as Record<string, unknown>)?.Error as Record<string, string> | undefined;
+  if (err?.Message) throw new Error(`即梦查询失败: ${err.Message}`);
 
-  const resp = response.data;
-  const err = resp?.ResponseMetadata?.Error;
-  if (err?.Message ?? err?.message) {
-    throw new Error(`即梦查询失败 (${err.Code ?? err.CodeN ?? 'Error'}): ${err.Message ?? err.message}`);
-  }
-  const code = resp?.code ?? resp?.Code;
-  if (code !== 10000 && code !== undefined) {
-    const msg = resp?.message ?? resp?.Message ?? JSON.stringify(resp);
-    throw new Error(`即梦查询结果失败 (code=${code}): ${msg}`);
-  }
-
-  const data = response.data?.data ?? {};
+  const d = data?.data as Record<string, unknown> | undefined;
   return {
-    status: data.status || 'unknown',
-    image_urls: data.image_urls,
-    message: response.data?.message,
+    status: String(d?.status ?? 'unknown'),
+    imageUrls: d?.image_urls as string[] | undefined,
   };
 }
 
-/** 轮询直到完成或超时，返回第一张图 URL */
-async function pollUntilDone(taskId: string, timeoutMs = 120000): Promise<string> {
+async function pollUntilDone(taskId: string, timeoutMs = 120_000): Promise<string> {
   const start = Date.now();
-  const interval = 2000;
-
   while (Date.now() - start < timeoutMs) {
-    const result = await getResult(taskId);
-
+    const result = await queryTask(taskId);
     if (result.status === 'done') {
-      if (result.image_urls?.length) {
-        return result.image_urls[0];
-      }
-      throw new Error('即梦任务完成但无图片 URL');
+      if (result.imageUrls?.length) return result.imageUrls[0];
+      throw new Error('即梦任务完成但无图片');
     }
     if (result.status === 'not_found' || result.status === 'expired') {
-      throw new Error(`即梦任务状态: ${result.status}`);
+      throw new Error(`即梦任务状态异常: ${result.status}`);
     }
-
-    await new Promise((r) => setTimeout(r, interval));
+    await new Promise(r => setTimeout(r, 2000));
   }
-
   throw new Error('即梦生成超时，请稍后重试');
 }
 
-export async function generateImage(params: ImageGenerationParams): Promise<string> {
+export async function generateImage(params: {
+  description: string;
+  characterDescription: string;
+  characterName: string;
+  style: string;
+  referenceImageUrl?: string;
+}): Promise<string> {
   if (!VOLC_ACCESSKEY || !VOLC_SECRETKEY) {
-    throw new Error('请配置 VOLC_ACCESSKEY 与 VOLC_SECRETKEY（或 JIMENG_API_KEY 与 JIMENG_SECRET_KEY）');
+    throw new Error('请配置 VOLC_ACCESSKEY 和 VOLC_SECRETKEY');
   }
 
-  const imageUrls = params.referenceImageUrl ? [params.referenceImageUrl] : undefined;
-  const taskId = await submitTask(params.prompt, imageUrls);
+  const stylePrompt = STYLE_PROMPTS[params.style] ?? '儿童绘本插画，温馨可爱';
+  const prompt = [
+    params.description,
+    `主角是${params.characterName}（${params.characterDescription}）`,
+    stylePrompt,
+    '图面整洁，构图饱满，色彩鲜明，高质量',
+  ].join('，');
+
+  const taskId = await submitTask(prompt, params.referenceImageUrl);
   return pollUntilDone(taskId);
 }
