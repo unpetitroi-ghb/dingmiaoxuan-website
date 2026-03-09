@@ -1,17 +1,26 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 
-const HINTS = [
-  '魔法画笔正在准备...',
-  '召唤角色中...',
-  '混合魔法颜料...',
-  '描绘星空...',
-  '添加闪闪发光...',
+// ── 阶段定义 ──────────────────────────────────────────────────────────────────
+const PHASES = [
+  { key: 'script',  label: '✍️ 正在编写故事脚本…' },
+  { key: 'images',  label: '🎨 正在绘制插画…'      },
+  { key: 'done',    label: '✨ 绘本生成完成！'       },
 ];
 
+const HINTS = [
+  '魔法画笔正在准备…',
+  '召唤故事精灵中…',
+  '混合魔法颜料…',
+  '描绘星空与彩虹…',
+  '添加闪闪发光效果…',
+  '故事情节正在展开…',
+];
+
+// ── 魔法瓶 UI ─────────────────────────────────────────────────────────────────
 function MagicBottle({ progress }: { progress: number }) {
   return (
     <div className="relative w-48 h-64 mx-auto">
@@ -26,12 +35,10 @@ function MagicBottle({ progress }: { progress: number }) {
       >
         <motion.div
           className="absolute bottom-0 left-0 right-0"
-          style={{
-            background: 'linear-gradient(to top, var(--kid-magic), var(--kid-primary))',
-          }}
+          style={{ background: 'linear-gradient(to top, var(--kid-magic), var(--kid-primary))' }}
           initial={{ height: '0%' }}
           animate={{ height: `${Math.min(100, progress)}%` }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
         />
         {Array.from({ length: 5 }).map((_, i) => (
           <motion.div
@@ -51,118 +58,201 @@ function MagicBottle({ progress }: { progress: number }) {
   );
 }
 
+// ── 主页面 ────────────────────────────────────────────────────────────────────
 export default function WaitingPage() {
   const router = useRouter();
-  const [progress, setProgress] = useState(0);
-  const [hint, setHint] = useState(HINTS[0]);
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
+  const [progress, setProgress]     = useState(0);
+  const [phaseIdx, setPhaseIdx]     = useState(0);
+  const [hint, setHint]             = useState(HINTS[0]);
+  const [error, setError]           = useState<string | null>(null);
+  const [pagesDone, setPagesDone]   = useState(0);
+  const [totalPages, setTotalPages] = useState(6);
+  const hasRun = useRef(false);
 
+  // 轮换 hint 文案
   useEffect(() => {
-    const raw = typeof window !== 'undefined' ? sessionStorage.getItem('createPayload') : null;
+    const t = setInterval(() => {
+      setHint(HINTS[Math.floor(Math.random() * HINTS.length)]);
+    }, 3000);
+    return () => clearInterval(t);
+  }, []);
+
+  // ── 核心生成流水线 ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    const raw = typeof window !== 'undefined'
+      ? sessionStorage.getItem('createPayload')
+      : null;
+
     if (!raw) {
       router.replace('/create');
       return;
     }
-  }, [router]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHint(HINTS[Math.floor(Math.random() * HINTS.length)]);
-    }, 3000);
-    return () => clearInterval(interval);
+    const payload = JSON.parse(raw) as {
+      photoUrls: string[];
+      analysisResult: { summary: string; all_labels: string[] } | null;
+      imageLabels: string[];
+      characterName: string;
+      storyIdea: string;
+      style: string;
+      projectId: string;
+    };
+
+    void runPipeline(payload);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  async function runPipeline(payload: {
+    photoUrls: string[];
+    analysisResult: { summary: string; all_labels: string[] } | null;
+    imageLabels: string[];
+    characterName: string;
+    storyIdea: string;
+    style: string;
+    projectId: string;
+  }) {
+    try {
+      // ── 阶段 1：生成故事脚本 (DeepSeek) ──────────────────────────────────
+      setPhaseIdx(0);
+      setProgress(5);
 
-  const handleClickFairy = useCallback(() => {
-    setProgress((p) => {
-      const next = Math.min(100, p + 5);
-      if (next >= 100) {
-        if (progressIntervalRef.current) {
-          clearInterval(progressIntervalRef.current);
-          progressIntervalRef.current = null;
-        }
-        setDone(true);
+      const storyBody: Record<string, unknown> = {
+        characterName: payload.characterName,
+        userStoryIdea: payload.storyIdea,
+        style: payload.style,
+        pageCount: 6,
+      };
+      if (payload.analysisResult) {
+        storyBody.imageAnalysis = {
+          summary: payload.analysisResult.summary,
+          labels: payload.imageLabels ?? payload.analysisResult.all_labels ?? [],
+        };
       }
-      return next;
-    });
-  }, []);
 
-  useEffect(() => {
-    progressIntervalRef.current = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) {
-          if (progressIntervalRef.current) {
-            clearInterval(progressIntervalRef.current);
-            progressIntervalRef.current = null;
-          }
-          setDone(true);
-          return 100;
-        }
-        return p + 4;
+      const storyRes = await fetch('/api/generate-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(storyBody),
       });
-    }, 800);
-    return () => {
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    };
-  }, []);
 
-  useEffect(() => {
-    if (!done) return;
-    const mockFullStory = {
-      title: '我的绘本',
-      pages: [
-        { index: 0, text: '（生成完成，此处为示例页）', imageUrl: '/hero-image.jpg' },
-      ],
-    };
-    sessionStorage.setItem('fullStory', JSON.stringify(mockFullStory));
-    router.replace('/create/preview');
-  }, [done, router]);
+      if (!storyRes.ok) {
+        const errData = await storyRes.json().catch(() => ({})) as { message?: string };
+        throw new Error(errData.message ?? `故事生成失败 (${storyRes.status})`);
+      }
+
+      const script = await storyRes.json() as {
+        title: string;
+        pages: { text: string; description: string }[];
+      };
+
+      const pages = script.pages ?? [];
+      setTotalPages(pages.length || 6);
+      setProgress(20);
+
+      // ── 阶段 2：逐页生成插画 (即梦 4.0) ──────────────────────────────────
+      setPhaseIdx(1);
+
+      const referenceImageUrl = payload.photoUrls?.[0] ?? undefined;
+      const generatedPages: { index: number; text: string; imageUrl: string }[] = [];
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        const prompt = `${page.description}，主角是${payload.characterName}`;
+
+        let imageUrl = '';
+        try {
+          const imgRes = await fetch('/api/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, style: payload.style, referenceImageUrl }),
+          });
+
+          if (imgRes.ok) {
+            const imgData = await imgRes.json() as { imageUrl?: string };
+            imageUrl = imgData.imageUrl ?? '';
+          } else {
+            console.warn(`第 ${i + 1} 页插画生成失败，跳过`);
+          }
+        } catch (imgErr) {
+          console.warn(`第 ${i + 1} 页插画请求异常：`, imgErr);
+        }
+
+        generatedPages.push({ index: i, text: page.text, imageUrl });
+        setPagesDone(i + 1);
+
+        // 进度 20% → 95%，按页平分
+        const imgProgress = 20 + Math.round(((i + 1) / pages.length) * 75);
+        setProgress(imgProgress);
+      }
+
+      // ── 阶段 3：完成 ──────────────────────────────────────────────────────
+      setPhaseIdx(2);
+      setProgress(100);
+
+      sessionStorage.setItem('fullStory', JSON.stringify({
+        title: script.title ?? '我的绘本',
+        pages: generatedPages,
+      }));
+
+      await new Promise((r) => setTimeout(r, 1200));
+      router.replace('/create/preview');
+
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+    }
+  }
+
+  const phase = PHASES[Math.min(phaseIdx, PHASES.length - 1)];
 
   return (
     <div className="kid-page min-h-screen flex flex-col items-center justify-center relative">
-      <h1 className="kid-title text-xl sm:text-2xl mb-6 text-center">
-        正在施展魔法...
+      <h1 className="kid-title text-xl sm:text-2xl mb-4 text-center">
+        正在施展魔法…
       </h1>
 
-      <div className="relative">
-        <MagicBottle progress={progress} />
-
-        <motion.div
-          whileTap={{ scale: 1.2 }}
-          onClick={handleClickFairy}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 text-5xl sm:text-6xl cursor-pointer select-none"
-          style={{ filter: 'drop-shadow(0 4px 12px rgba(139,92,246,0.3))' }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && handleClickFairy()}
-          aria-label="点击小精灵加速"
-        >
-          🧚‍♀️
-        </motion.div>
-      </div>
-
-      <p className="kid-muted text-center mt-6 min-h-[1.5em]">
-        {hint}
+      {/* 当前阶段 */}
+      <p className="text-[var(--kid-magic-dark)] font-semibold text-base mb-6 text-center min-h-[1.5em]">
+        {phase?.label}
       </p>
 
-      {error && (
-        <p className="text-[var(--kid-error)] text-sm mt-4 text-center">
-          {error}
+      {/* 魔法瓶 */}
+      <MagicBottle progress={progress} />
+
+      {/* 进度数字 */}
+      <p className="kid-muted text-sm mt-4">{progress}%</p>
+
+      {/* 插画页数进度（阶段2时显示） */}
+      {phaseIdx === 1 && (
+        <p className="kid-muted text-sm mt-1">
+          已完成插画 {pagesDone} / {totalPages} 页
         </p>
       )}
 
-      <p className="kid-muted text-sm mt-4">
-        {progress}%
-      </p>
+      {/* 随机提示文案 */}
+      <p className="kid-muted text-center mt-3 min-h-[1.5em] text-sm">{hint}</p>
 
-      <a
-        href="/create"
-        className="kid-btn-secondary mt-8"
-      >
-        返回重试
-      </a>
+      {/* 错误提示 */}
+      {error && (
+        <div className="mt-6 kid-card p-4 max-w-sm text-center space-y-3">
+          <p className="text-[var(--kid-error)] text-sm">{error}</p>
+          <a href="/create" className="kid-btn-secondary block">
+            返回重试
+          </a>
+        </div>
+      )}
+
+      {!error && (
+        <a
+          href="/create"
+          className="mt-8 text-xs kid-muted underline underline-offset-2 opacity-50 hover:opacity-80"
+        >
+          取消，返回重新创作
+        </a>
+      )}
     </div>
   );
 }

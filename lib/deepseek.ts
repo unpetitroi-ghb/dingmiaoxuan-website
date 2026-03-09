@@ -238,3 +238,86 @@ ${cluesText}
   const content = response.data.choices[0].message.content;
   return JSON.parse(content) as ComicScriptResult;
 }
+
+// ── generateStructuredScript（供 generate-script API 使用） ──────────────────
+
+export interface StructuredScriptParams {
+  character_description: string;
+  character_name: string;
+  story_idea: string;
+  style: string;
+  pageCount: number;
+}
+
+export interface StructuredScriptResult {
+  title?: string;
+  theme?: string;
+  targetAge?: string;
+  style?: string;
+  characterProfile?: {
+    name?: string;
+    coreTraits?: string[];
+    visualConsistency?: string;
+  };
+  pages?: Record<string, unknown>[];
+}
+
+/**
+ * 生成结构化绘本脚本（每页含 imagePrompt、caption、dialogue、visualChecklist）
+ * 供 /api/generate-script 接口调用
+ */
+export async function generateStructuredScript(
+  params: StructuredScriptParams
+): Promise<StructuredScriptResult> {
+  const prompt = `
+你是一位专业的儿童绘本编剧。请根据以下信息，创作一个 ${params.pageCount} 页的儿童绘本脚本。
+
+【角色名称】${params.character_name}
+【角色描述】${params.character_description}
+【故事创意】${params.story_idea || '一段温馨有趣的冒险'}
+【绘本风格】${params.style}
+
+请输出 JSON 格式，结构如下：
+{
+  "title": "绘本标题",
+  "theme": "故事主题（如：友情、勇气、成长）",
+  "targetAge": "目标年龄段（如：3-8岁）",
+  "style": "${params.style}",
+  "characterProfile": {
+    "name": "${params.character_name}",
+    "coreTraits": ["性格特征1", "性格特征2"],
+    "visualConsistency": "角色视觉描述（供每页 prompt 插入）"
+  },
+  "pages": [
+    {
+      "pageNo": 1,
+      "sceneTitle": "本页场景标题",
+      "imagePrompt": "详细的画面描述（供 AI 绘图）",
+      "caption": "本页旁白/文字（简短，适合儿童）",
+      "dialogue": "角色对话（可为空字符串）",
+      "visualChecklist": ["画面必须包含的元素1", "元素2"]
+    }
+  ]
+}
+
+要求：pages 包含 ${params.pageCount} 页，故事完整有起承转合，caption 不超过 30 字，教育意义积极正面。
+`;
+
+  const response = await axios.post(
+    DEEPSEEK_API_URL,
+    {
+      model: 'deepseek-chat',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  const content = response.data.choices[0].message.content as string;
+  return JSON.parse(content) as StructuredScriptResult;
+}
