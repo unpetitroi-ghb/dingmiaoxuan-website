@@ -11,7 +11,7 @@ export default function PortalPage() {
         <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
       </Head>
 
-      <div style={{ background: '#FDF9F5', minHeight: '100vh', fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif' }}>
+      <div style={{ background: '#F0F8FF', minHeight: '100vh', fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif' }}>
 
         {/* ══════════════════════════════════════════
             HERO — 全屏背景图 + 大气氛围层叠
@@ -28,20 +28,20 @@ export default function PortalPage() {
           {/* 氛围层1：四边暗角，让中心更亮 */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'radial-gradient(ellipse at 50% 42%, transparent 30%, rgba(12,4,0,0.42) 100%)',
+            background: 'radial-gradient(ellipse at 50% 42%, transparent 25%, rgba(0,20,50,0.35) 100%)',
           }} />
 
-          {/* 氛围层2：暖橙色调 */}
+          {/* 氛围层2：海洋蓝色调 */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'linear-gradient(160deg, rgba(255,140,60,0.12) 0%, rgba(100,60,180,0.10) 100%)',
+            background: 'linear-gradient(160deg, rgba(0,120,200,0.08) 0%, rgba(0,60,120,0.15) 100%)',
           }} />
 
           {/* 氛围层3：底部渐出 → 与页面背景色完美衔接 */}
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             height: '55%',
-            background: 'linear-gradient(to top, #FDF9F5 0%, rgba(253,249,245,0.6) 50%, transparent 100%)',
+            background: 'linear-gradient(to top, #F0F8FF 0%, rgba(240,248,255,0.6) 50%, transparent 100%)',
           }} />
 
           {/* 顶部导航 */}
@@ -132,7 +132,7 @@ export default function PortalPage() {
                 {/* 插画下方渐出 */}
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0, height: '110px',
-                  background: 'linear-gradient(to top, #fff 0%, transparent 100%)',
+                  background: 'linear-gradient(to top, #F0F8FF 0%, transparent 100%)',
                 }} />
                 {/* 暖色调叠加 */}
                 <div style={{
@@ -209,7 +209,7 @@ export default function PortalPage() {
           {/* ── 暖暖相册 (Coming soon) ── */}
           <div style={{ marginTop: '1rem' }}>
             <div style={{
-              background: 'rgba(255,252,248,0.85)',
+              background: 'rgba(240,248,255,0.85)',
               borderRadius: '1.5rem',
               padding: '1.25rem 1.5rem',
               display: 'flex', alignItems: 'center', gap: '1.1rem',
@@ -239,8 +239,8 @@ export default function PortalPage() {
         {/* ── Footer ── */}
         <footer style={{
           textAlign: 'center', padding: '1.75rem 1.5rem',
-          borderTop: '1px solid rgba(210,180,160,0.2)',
-          color: '#C4A898', fontSize: '0.78rem', letterSpacing: '0.03em',
+          borderTop: '1px solid rgba(160,200,230,0.25)',
+          color: '#7AAAC4', fontSize: '0.78rem', letterSpacing: '0.03em',
         }}>
           © 2025 暖暖的小世界 · 用爱做的产品
         </footer>
