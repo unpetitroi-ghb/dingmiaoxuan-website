@@ -105,6 +105,16 @@ export default function PortalPage() {
           position: 'fixed', inset: 0, zIndex: 0,
           background: 'linear-gradient(180deg, #87CEEB 0%, #B8E4FF 28%, #D4F1B8 58%, #A8D8A8 80%, #8BC8A8 100%)',
         }} />
+        {/* ══ 游乐场背景图（hero区域） ══ */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1,
+          height: 'min(520px, 55vw)',
+          backgroundImage: 'url(/bg-playground.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+        }} />
 
         {/* ══ 彩虹装饰 ══ */}
         <div className="animate-rainbow" style={{
@@ -171,7 +181,7 @@ export default function PortalPage() {
           </nav>
 
           {/* ── Hero ── */}
-          <section style={{ textAlign: 'center', padding: '1rem 1.5rem 2.5rem' }}>
+          <section style={{ textAlign: 'center', padding: '1rem 1.5rem 2.5rem', position: 'relative', zIndex: 4 }}>
             <div style={{
               display: 'inline-block',
               background: 'rgba(255,255,255,0.3)', backdropFilter: 'blur(8px)',
@@ -339,6 +349,20 @@ function AppCard({ app }: { app: typeof APPS[number] }) {
 
       {/* 内容区 */}
       <div style={{ padding: app.featured ? '1.5rem 1.75rem' : '1.25rem 1.5rem' }}>
+        {/* 暖暖绘本插图 */}
+        {app.featured && (
+          <div style={{
+            borderRadius: '1rem', overflow: 'hidden', marginBottom: '1.25rem',
+            boxShadow: '0 4px 20px rgba(139,92,246,0.15)',
+            aspectRatio: '16/7',
+          }}>
+            <img
+              src="/img-book.png"
+              alt="魔法绘本"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+            />
+          </div>
+        )}
         <p style={{
           color: '#374151', lineHeight: 1.65,
           fontSize: app.featured ? '1rem' : '0.9rem',
