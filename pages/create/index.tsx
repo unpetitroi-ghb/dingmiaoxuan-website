@@ -21,6 +21,35 @@ const PAGE_COUNTS = [6, 8, 10];
 
 const CHARACTER_LABELS = ['孩子', '爸爸', '妈妈', '爷爷', '奶奶', '全家人', '宠物', '其他'];
 
+// ── 图片压缩（Canvas，最长边 1280px，质量 0.82）────────────────────────────
+async function compressImage(file: File): Promise<File> {
+  // 非图片或小于 500KB 的文件直接跳过
+  if (!file.type.startsWith('image/') || file.size < 500 * 1024) return file;
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 1280;
+      let { width, height } = img;
+      if (width > MAX || height > MAX) {
+        if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+        else { width = Math.round(width * MAX / height); height = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        blob => resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file),
+        'image/jpeg', 0.82
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 // ── 图片上传 Hook ─────────────────────────────────────────────────────────────
 function useImageUpload() {
   const [urls, setUrls] = useState<string[]>([]);
@@ -33,8 +62,10 @@ function useImageUpload() {
     setUploading(true);
     setError(null);
     try {
+      // 先压缩再上传
+      const compressed = await Promise.all(newFiles.map(compressImage));
       const form = new FormData();
-      for (const f of newFiles) form.append('images[]', f);
+      for (const f of compressed) form.append('images[]', f);
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const data = await res.json() as { urls?: string[]; error?: string };
       if (!res.ok) throw new Error(data.error ?? '上传失败');
