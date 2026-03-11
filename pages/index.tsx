@@ -4,18 +4,8 @@ import Link from 'next/link';
 const COMING_SOON = [
   {
     emoji: '📸',
-    title: '叮叮相册',
+    title: '暖暖相册',
     desc: '家庭成长时光轴',
-  },
-  {
-    emoji: '🎵',
-    title: '暖暖朗读',
-    desc: 'AI 声音讲睡前故事',
-  },
-  {
-    emoji: '🎮',
-    title: '叮叮益智',
-    desc: '绘本互动小游戏',
   },
 ];
 
