@@ -1,152 +1,204 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-const COMING_SOON = [
-  {
-    emoji: '📸',
-    title: '暖暖相册',
-    desc: '家庭成长时光轴',
-  },
-];
-
 export default function PortalPage() {
   return (
     <>
       <Head>
         <title>暖暖的小世界</title>
-        <meta name="description" content="暖暖的小世界 — 专为家庭打造的数字乐园" />
+        <meta name="description" content="把每一个珍贵的家庭瞬间，变成会说故事的绘本" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
       </Head>
 
-      <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'var(--font-sans), "PingFang SC", "Microsoft YaHei", sans-serif' }}>
+      <div style={{ background: '#FDF9F5', minHeight: '100vh', fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif' }}>
 
-        {/* ── 导航 ── */}
-        <nav style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '1.25rem 2rem', maxWidth: '960px', margin: '0 auto',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>🌟</span>
-            <span style={{
-              fontFamily: 'ZCOOL KuaiLe, sans-serif',
-              fontSize: '1.25rem', fontWeight: 700, color: '#1a1a1a',
-            }}>
-              暖暖的小世界
-            </span>
-          </div>
-          <span style={{ fontSize: '0.8rem', color: '#999', letterSpacing: '0.05em' }}>
-            dingmiaoxuan.com
-          </span>
-        </nav>
+        {/* ══════════════════════════════════════════
+            HERO — 全屏背景图 + 大气氛围层叠
+        ══════════════════════════════════════════ */}
+        <div style={{ position: 'relative', height: '72vh', minHeight: '440px', maxHeight: '700px', overflow: 'hidden' }}>
 
-        {/* ── Hero 背景图 ── */}
-        <div style={{
-          width: '100%', height: '320px', overflow: 'hidden', position: 'relative',
-        }}>
+          {/* 背景图 */}
           <img
             src="/bg-playground.png"
             alt=""
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%',
-              display: 'block',
-            }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 18%' }}
           />
-          {/* 顶部渐入 */}
+
+          {/* 氛围层1：四边暗角，让中心更亮 */}
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: '60px',
-            background: 'linear-gradient(to bottom, #FAFAF8, transparent)',
+            position: 'absolute', inset: 0,
+            background: 'radial-gradient(ellipse at 50% 42%, transparent 30%, rgba(12,4,0,0.42) 100%)',
           }} />
-          {/* 底部渐出 */}
+
+          {/* 氛围层2：暖橙色调 */}
           <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, height: '100px',
-            background: 'linear-gradient(to top, #FAFAF8, transparent)',
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(160deg, rgba(255,140,60,0.12) 0%, rgba(100,60,180,0.10) 100%)',
           }} />
-          {/* 中心文字 */}
+
+          {/* 氛围层3：底部渐出 → 与页面背景色完美衔接 */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            height: '55%',
+            background: 'linear-gradient(to top, #FDF9F5 0%, rgba(253,249,245,0.6) 50%, transparent 100%)',
+          }} />
+
+          {/* 顶部导航 */}
+          <nav style={{
+            position: 'absolute', top: 0, left: 0, right: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '1.5rem 2rem',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>🌟</span>
+              <span style={{
+                fontFamily: 'ZCOOL KuaiLe, sans-serif',
+                fontSize: '1.3rem', fontWeight: 700,
+                color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+              }}>暖暖的小世界</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.65)', letterSpacing: '0.1em' }}>
+              dingmiaoxuan.com
+            </span>
+          </nav>
+
+          {/* Hero 文字 — 置于图像正中偏上 */}
           <div style={{
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: '0 1.5rem',
+            paddingBottom: '15%',
           }}>
             <h1 style={{
               fontFamily: 'ZCOOL KuaiLe, sans-serif',
-              fontSize: 'clamp(2rem, 6vw, 3rem)',
+              fontSize: 'clamp(2.2rem, 7vw, 4.2rem)',
               color: '#fff',
-              textShadow: '0 2px 20px rgba(0,0,0,0.35)',
-              margin: 0, letterSpacing: '0.02em',
+              textShadow: '0 4px 28px rgba(0,0,0,0.5)',
+              margin: '0 0 0.875rem',
+              letterSpacing: '0.04em',
+              textAlign: 'center',
+              lineHeight: 1.15,
             }}>
-              每天都有新冒险
+              把今天，变成<br />永远的故事
             </h1>
             <p style={{
-              color: 'rgba(255,255,255,0.9)',
-              fontSize: '1rem', marginTop: '0.5rem',
-              textShadow: '0 1px 8px rgba(0,0,0,0.3)',
+              fontSize: 'clamp(0.9rem, 2.5vw, 1.05rem)',
+              color: 'rgba(255,255,255,0.88)',
+              textShadow: '0 2px 14px rgba(0,0,0,0.45)',
+              margin: 0, textAlign: 'center',
+              maxWidth: '360px', lineHeight: 1.65,
             }}>
-              把每一个珍贵的家庭瞬间，变成会说故事的宝藏
+              为暖暖，也为每一个值得被永远珍藏的家庭瞬间
             </p>
           </div>
         </div>
 
-        {/* ── 主内容 ── */}
-        <div style={{ maxWidth: '860px', margin: '0 auto', padding: '2rem 1.5rem 5rem' }}>
+        {/* ══════════════════════════════════════════
+            主内容 — 与 hero 无缝相连
+        ══════════════════════════════════════════ */}
+        <div style={{ maxWidth: '780px', margin: '0 auto', padding: '0 1.25rem 5rem' }}>
 
-          {/* ── 暖暖绘本主卡 ── */}
-          <Link href="/create" style={{ textDecoration: 'none', display: 'block', marginBottom: '1.5rem' }}>
-            <div style={{
-              background: '#fff',
-              borderRadius: '1.5rem',
-              overflow: 'hidden',
-              boxShadow: '0 2px 24px rgba(0,0,0,0.08)',
-              border: '1px solid #eee',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              cursor: 'pointer',
-            }}
+          {/* ── 主卡片：暖暖绘本 ── */}
+          {/* 关键：负 margin 让卡片"嵌入"hero底部，消除断裂感 */}
+          <Link href="/create" style={{ textDecoration: 'none', display: 'block', marginTop: '-88px', position: 'relative', zIndex: 10 }}>
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: '2rem',
+                overflow: 'hidden',
+                boxShadow: '0 24px 80px rgba(180,80,30,0.14), 0 6px 24px rgba(0,0,0,0.07)',
+                transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease',
+                cursor: 'pointer',
+              }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 40px rgba(0,0,0,0.12)';
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = 'translateY(-8px)';
+                el.style.boxShadow = '0 40px 100px rgba(180,80,30,0.18), 0 10px 40px rgba(0,0,0,0.1)';
               }}
               onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.transform = '';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 24px rgba(0,0,0,0.08)';
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = '';
+                el.style.boxShadow = '0 24px 80px rgba(180,80,30,0.14), 0 6px 24px rgba(0,0,0,0.07)';
               }}
             >
-              {/* 绘本插图 */}
-              <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
+              {/* 绘本插画 — 卡片顶部 */}
+              <div style={{ position: 'relative', height: '240px', overflow: 'hidden' }}>
                 <img
                   src="/img-book.png"
                   alt="魔法绘本"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' }}
                 />
+                {/* 插画下方渐出 */}
                 <div style={{
-                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '80px',
-                  background: 'linear-gradient(to top, #fff, transparent)',
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '110px',
+                  background: 'linear-gradient(to top, #fff 0%, transparent 100%)',
+                }} />
+                {/* 暖色调叠加 */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(135deg, rgba(255,150,70,0.08) 0%, rgba(130,80,220,0.08) 100%)',
                 }} />
               </div>
 
               {/* 文字区 */}
-              <div style={{ padding: '1.5rem 2rem 2rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '1.5rem' }}>📖</span>
-                    <span style={{
-                      fontFamily: 'ZCOOL KuaiLe, sans-serif',
-                      fontSize: '1.5rem', fontWeight: 700, color: '#1a1a1a',
-                    }}>暖暖绘本</span>
-                    <span style={{
-                      background: '#FFF3EE', color: '#FF8A5C',
-                      fontSize: '0.75rem', fontWeight: 700,
-                      padding: '0.2rem 0.6rem', borderRadius: '2rem',
-                      border: '1px solid #FFD4BC',
-                    }}>✨ 免费体验</span>
-                  </div>
-                  <p style={{ color: '#555', fontSize: '0.95rem', lineHeight: 1.6, margin: 0, maxWidth: '480px' }}>
-                    上传今天的照片，AI 帮你生成以家人为主角的专属绘本。动物园、生日、爷爷的故事……每个瞬间都值得被珍藏。
-                  </p>
+              <div style={{ padding: '0.25rem 2rem 2.25rem' }}>
+
+                {/* 标题行 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <span style={{
+                    fontFamily: 'ZCOOL KuaiLe, sans-serif',
+                    fontSize: '1.8rem', color: '#2C1810',
+                  }}>暖暖绘本</span>
+                  <span style={{
+                    background: 'linear-gradient(135deg, #FFF0E8, #EDE9FE)',
+                    color: '#E07040',
+                    fontSize: '0.75rem', fontWeight: 700,
+                    padding: '0.22rem 0.75rem', borderRadius: '2rem',
+                    border: '1px solid rgba(220,120,60,0.2)',
+                  }}>✨ 免费体验</span>
                 </div>
+
+                {/* 正文 */}
+                <p style={{
+                  color: '#6B4C3E', fontSize: '0.95rem', lineHeight: 1.8,
+                  margin: '0 0 1.75rem',
+                }}>
+                  上传今天的照片，AI 帮你生成以家人为主角的专属绘本。<br />
+                  动物园的第一次惊喜、爷爷讲的童年故事、六岁的生日派对……<br />
+                  每一个瞬间，都值得被永远珍藏。
+                </p>
+
+                {/* 三步流程 */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #FF8A5C, #8B5CF6)',
-                  color: '#fff', fontWeight: 700, fontSize: '0.95rem',
-                  padding: '0.75rem 1.75rem', borderRadius: '2rem',
-                  whiteSpace: 'nowrap', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  gap: '0', marginBottom: '2rem',
+                  background: '#FDF6F0', borderRadius: '1.25rem', padding: '1.1rem',
+                }}>
+                  {([
+                    { icon: '📸', label: '上传照片' },
+                    { icon: '✨', label: 'AI 理解场景' },
+                    { icon: '📖', label: '生成专属绘本' },
+                  ] as { icon: string; label: string }[]).map((s, i) => (
+                    <div key={s.label} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                      {i > 0 && (
+                        <div style={{ color: '#D4A88A', fontSize: '1.1rem', margin: '0 0.25rem', flexShrink: 0 }}>›</div>
+                      )}
+                      <div style={{ flex: 1, textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>{s.icon}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#8B5E4A', fontWeight: 600, lineHeight: 1.3 }}>{s.label}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA 按钮 */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #FF8A5C 0%, #8B5CF6 100%)',
+                  color: '#fff', borderRadius: '1.25rem',
+                  padding: '1.05rem', textAlign: 'center',
+                  fontWeight: 700, fontSize: '1.05rem', letterSpacing: '0.03em',
+                  boxShadow: '0 8px 32px rgba(255,100,60,0.30)',
                 }}>
                   进入绘本乐园 →
                 </div>
@@ -154,39 +206,41 @@ export default function PortalPage() {
             </div>
           </Link>
 
-          {/* ── 即将上线 三格 ── */}
-          <p style={{ fontSize: '0.8rem', color: '#bbb', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.875rem' }}>
-            更多玩法即将上线
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.875rem' }}>
-            {COMING_SOON.map(app => (
-              <div key={app.title} style={{
-                background: '#fff', borderRadius: '1.25rem',
-                padding: '1.5rem', border: '1px solid #eee',
-                display: 'flex', alignItems: 'center', gap: '1rem',
-              }}>
-                <div style={{
-                  width: '48px', height: '48px', borderRadius: '0.875rem',
-                  background: '#F5F5F3', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0,
-                }}>
-                  {app.emoji}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1a1a1a', marginBottom: '0.2rem' }}>
-                    {app.title}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#999' }}>{app.desc}</div>
-                </div>
+          {/* ── 暖暖相册 (Coming soon) ── */}
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{
+              background: 'rgba(255,252,248,0.85)',
+              borderRadius: '1.5rem',
+              padding: '1.25rem 1.5rem',
+              display: 'flex', alignItems: 'center', gap: '1.1rem',
+              border: '1px solid rgba(230,200,180,0.5)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+            }}>
+              <div style={{
+                width: '52px', height: '52px', borderRadius: '1rem', flexShrink: 0,
+                background: 'linear-gradient(135deg, #FFE8D6 0%, #DBEAFE 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.5rem',
+              }}>📸</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#3C2418', marginBottom: '0.2rem' }}>暖暖相册</div>
+                <div style={{ fontSize: '0.82rem', color: '#A07860' }}>家庭成长时光轴</div>
               </div>
-            ))}
+              <div style={{
+                fontSize: '0.72rem', color: '#C4937A', fontWeight: 700,
+                padding: '0.28rem 0.875rem', borderRadius: '2rem',
+                border: '1px solid #EDD0C0', background: '#FFF4EE',
+                letterSpacing: '0.02em',
+              }}>即将上线</div>
+            </div>
           </div>
         </div>
 
-        {/* ── 底部 ── */}
+        {/* ── Footer ── */}
         <footer style={{
-          borderTop: '1px solid #eee', padding: '1.5rem',
-          textAlign: 'center', color: '#bbb', fontSize: '0.8rem',
+          textAlign: 'center', padding: '1.75rem 1.5rem',
+          borderTop: '1px solid rgba(210,180,160,0.2)',
+          color: '#C4A898', fontSize: '0.78rem', letterSpacing: '0.03em',
         }}>
           © 2025 暖暖的小世界 · 用爱做的产品
         </footer>
