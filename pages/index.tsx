@@ -1,240 +1,400 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-const SCENARIOS = [
-  { emoji: '🦁', title: '动物园奇遇记', desc: '孩子第一次见到长颈鹿，好奇又兴奋' },
-  { emoji: '💕', title: '爸爸妈妈的爱情故事', desc: '把你们相遇的故事，讲给孩子听' },
-  { emoji: '🌏', title: '爷爷的童年往事', desc: '让老人的故事，跨越时间传给下一代' },
-  { emoji: '🎂', title: '六岁生日的惊喜', desc: '把这个特别的一天，永远留在绘本里' },
+// ── 乐园项目列表 ─────────────────────────────────────────────────────────────
+const APPS = [
+  {
+    id: 'nuannuan',
+    emoji: '📖',
+    roofColor: 'linear-gradient(135deg, #FF8A5C, #8B5CF6)',
+    bgColor: '#fff8f5',
+    badgeColor: '#FF8A5C',
+    badge: '✨ 现已开放',
+    title: '暖暖绘本',
+    subtitle: '专属绘本制作工坊',
+    desc: '上传今天的照片，AI 帮你生成以家人为主角的专属绘本——动物园、生日、爷爷的故事……每个瞬间都值得被珍藏',
+    tags: ['免费体验', 'AI 绘图', '可下载打印'],
+    href: '/create',
+    btnText: '进入绘本乐园 →',
+    btnStyle: 'primary' as const,
+    featured: true,
+  },
+  {
+    id: 'album',
+    emoji: '📸',
+    roofColor: 'linear-gradient(135deg, #60A5FA, #34D399)',
+    bgColor: '#f0f9ff',
+    badgeColor: '#60A5FA',
+    badge: '🔜 即将上线',
+    title: '叮叮相册',
+    subtitle: '家庭时光轴',
+    desc: '上传全家福，AI 自动整理成有温度的家庭成长故事',
+    tags: ['智能归类', '时光轴', '家庭分享'],
+    href: null,
+    btnText: '敬请期待',
+    btnStyle: 'coming' as const,
+    featured: false,
+  },
+  {
+    id: 'voice',
+    emoji: '🎵',
+    roofColor: 'linear-gradient(135deg, #F472B6, #A78BFA)',
+    bgColor: '#fdf4ff',
+    badgeColor: '#F472B6',
+    badge: '🔜 即将上线',
+    title: '暖暖朗读',
+    subtitle: 'AI 声音讲故事',
+    desc: '用温柔的 AI 声音朗读你的绘本，睡前故事神器',
+    tags: ['儿童声线', '情感朗读', '睡前故事'],
+    href: null,
+    btnText: '敬请期待',
+    btnStyle: 'coming' as const,
+    featured: false,
+  },
+  {
+    id: 'game',
+    emoji: '🎮',
+    roofColor: 'linear-gradient(135deg, #34D399, #06B6D4)',
+    bgColor: '#f0fdf4',
+    badgeColor: '#34D399',
+    badge: '🔜 即将上线',
+    title: '叮叮益智',
+    subtitle: '绘本互动游戏',
+    desc: '基于绘本故事的益智互动，认字、找图、故事排序……让阅读更好玩',
+    tags: ['亲子互动', '学认字', '益智拼图'],
+    href: null,
+    btnText: '敬请期待',
+    btnStyle: 'coming' as const,
+    featured: false,
+  },
 ];
 
-const STEPS = [
-  { num: '01', icon: '📸', title: '上传照片', desc: '角色照片 + 今天的活动照片，AI来理解你们的故事' },
-  { num: '02', icon: '✨', title: 'AI 理解', desc: '自动识别场景与活动，推荐故事方向，你来选' },
-  { num: '03', icon: '📖', title: '生成绘本', desc: '专属插画逐页生成，可下载，可分享，永久珍藏' },
+// ── 装饰云朵数据 ────────────────────────────────────────────────────────────
+const CLOUDS = [
+  { top: '8%',  left: '5%',  size: '90px', delay: '0s',   opacity: 0.9 },
+  { top: '4%',  left: '28%', size: '60px', delay: '2s',   opacity: 0.7 },
+  { top: '14%', left: '55%', size: '110px', delay: '1s',  opacity: 0.85 },
+  { top: '6%',  left: '78%', size: '75px', delay: '3s',   opacity: 0.75 },
+  { top: '20%', left: '90%', size: '55px', delay: '1.5s', opacity: 0.6 },
 ];
 
-export default function HomePage() {
+// ── 浮动星星 ────────────────────────────────────────────────────────────────
+const STARS = [
+  { top: '18%', left: '12%', delay: '0s' },
+  { top: '30%', left: '88%', delay: '1.2s' },
+  { top: '55%', left: '6%',  delay: '0.8s' },
+  { top: '70%', left: '92%', delay: '2.1s' },
+  { top: '40%', left: '50%', delay: '1.6s' },
+];
+
+export default function PortalPage() {
   return (
     <>
       <Head>
-        <title>暖暖绘本 — 把每个家庭故事变成专属绘本</title>
-        <meta name="description" content="上传照片，AI帮你生成以孩子为主角的专属绘本。动物园、生日、家族故事……每个珍贵瞬间都值得被永久珍藏。" />
+        <title>暖暖的小世界 — dingmiaoxuan.com</title>
+        <meta name="description" content="暖暖的小世界，专为家庭打造的儿童数字乐园。暖暖绘本、AI故事、成长相册……每个功能都为珍藏家庭美好时光而生。" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
       </Head>
 
-      <div style={{ background: 'var(--kid-background)', minHeight: '100vh' }}>
+      {/* ══ 页面容器 ══ */}
+      <div style={{ minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
 
-        {/* ── 导航栏 ── */}
-        <nav style={{
-          position: 'sticky', top: 0, zIndex: 50,
-          background: 'rgba(249,250,251,0.9)', backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid var(--kid-border-light)',
-          padding: '0 1.5rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          height: '64px',
-        }}>
-          <span className="kid-title" style={{ fontSize: '1.4rem' }}>暖暖绘本</span>
-          <Link href="/create">
-            <button className="kid-btn-primary" style={{ minHeight: '40px', padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}>
-              开始创作
-            </button>
-          </Link>
-        </nav>
+        {/* ══ 天空背景 ══ */}
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 0,
+          background: 'linear-gradient(180deg, #87CEEB 0%, #B8E4FF 28%, #D4F1B8 58%, #A8D8A8 80%, #8BC8A8 100%)',
+        }} />
 
-        {/* ── Hero ── */}
-        <section style={{
-          textAlign: 'center',
-          padding: '5rem 1.5rem 4rem',
-          background: 'linear-gradient(160deg, #fff8f5 0%, #f5f0ff 100%)',
-          position: 'relative', overflow: 'hidden',
-        }}>
-          {/* 背景装饰 */}
-          <div style={{ position: 'absolute', top: '10%', left: '5%', fontSize: '3rem', opacity: 0.15 }} className="animate-float-slow">🌟</div>
-          <div style={{ position: 'absolute', top: '20%', right: '8%', fontSize: '2.5rem', opacity: 0.12 }} className="animate-float-slower">📖</div>
-          <div style={{ position: 'absolute', bottom: '15%', left: '10%', fontSize: '2rem', opacity: 0.1 }} className="animate-float-slow">🎨</div>
-          <div style={{ position: 'absolute', bottom: '10%', right: '5%', fontSize: '3rem', opacity: 0.12 }} className="animate-float-slower">✨</div>
+        {/* ══ 彩虹装饰 ══ */}
+        <div className="animate-rainbow" style={{
+          position: 'absolute', top: '60px', left: '50%', transform: 'translateX(-50%)',
+          width: '500px', height: '200px', zIndex: 1,
+          background: 'conic-gradient(from 180deg at 50% 100%, #FF6B6B, #FFD93D, #6BCF63, #4ECDC4, #45B7D1, #A78BFA, #FF6B6B)',
+          borderRadius: '500px 500px 0 0',
+          opacity: 0.25,
+          filter: 'blur(6px)',
+          pointerEvents: 'none',
+        }} />
 
-          <div style={{ maxWidth: '680px', margin: '0 auto', position: 'relative' }}>
+        {/* ══ 云朵 ══ */}
+        {CLOUDS.map((c, i) => (
+          <div key={i} className={i % 2 === 0 ? 'animate-cloud' : 'animate-cloud-slow'} style={{
+            position: 'absolute', top: c.top, left: c.left, zIndex: 2,
+            width: c.size, opacity: c.opacity,
+            animationDelay: c.delay, pointerEvents: 'none',
+          }}>
+            <CloudSVG />
+          </div>
+        ))}
+
+        {/* ══ 浮动星星 ══ */}
+        {STARS.map((s, i) => (
+          <div key={i} className="animate-float-slow" style={{
+            position: 'absolute', top: s.top, left: s.left, zIndex: 2,
+            fontSize: '1.4rem', animationDelay: s.delay, pointerEvents: 'none', opacity: 0.7,
+          }}>
+            ⭐
+          </div>
+        ))}
+
+        {/* ══ 主内容 ══ */}
+        <div style={{ position: 'relative', zIndex: 3 }}>
+
+          {/* ── 顶部导航 ── */}
+          <nav style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '1rem 1.5rem',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span className="animate-float-slow" style={{ fontSize: '2rem', display: 'inline-block' }}>🌟</span>
+              <div>
+                <div style={{
+                  fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700,
+                  color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                }}>
+                  暖暖的小世界
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.08em', fontWeight: 600 }}>
+                  dingmiaoxuan.com
+                </div>
+              </div>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.3)', backdropFilter: 'blur(10px)',
+              borderRadius: '2rem', padding: '0.35rem 0.875rem',
+              fontSize: '0.8rem', color: '#fff', fontWeight: 600,
+              border: '1px solid rgba(255,255,255,0.5)',
+            }}>
+              🎪 欢迎光临
+            </div>
+          </nav>
+
+          {/* ── Hero ── */}
+          <section style={{ textAlign: 'center', padding: '1rem 1.5rem 2.5rem' }}>
             <div style={{
               display: 'inline-block',
-              background: 'var(--kid-primary-soft)',
-              color: 'var(--kid-primary-dark)',
-              borderRadius: '2rem',
-              padding: '0.35rem 1rem',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              marginBottom: '1.5rem',
+              background: 'rgba(255,255,255,0.3)', backdropFilter: 'blur(8px)',
+              borderRadius: '2rem', padding: '0.5rem 1.25rem',
+              fontSize: '0.875rem', color: '#fff', fontWeight: 700,
+              border: '1.5px solid rgba(255,255,255,0.5)',
+              marginBottom: '1.25rem',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
             }}>
-              🎉 AI 驱动 · 专属定制 · 永久珍藏
+              🎠 家庭专属数字乐园，现已开放 🎠
             </div>
 
-            <h1 className="kid-title" style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', lineHeight: 1.2, marginBottom: '1.25rem' }}>
-              把今天，变成<br />永远的故事
+            <h1 style={{
+              fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 6vw, 3.5rem)',
+              color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.2)',
+              lineHeight: 1.2, marginBottom: '1rem',
+            }}>
+              每天都有新冒险 ✨
             </h1>
-
-            <p className="kid-muted" style={{ fontSize: '1.125rem', lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: '480px', margin: '0 auto 2.5rem' }}>
-              上传几张照片，10 分钟生成专属绘本<br />
-              让每个珍贵的家庭瞬间，都值得被永久珍藏
+            <p style={{
+              fontSize: '1.1rem', color: 'rgba(255,255,255,0.92)',
+              textShadow: '0 2px 8px rgba(0,0,0,0.15)', lineHeight: 1.6,
+              maxWidth: '480px', margin: '0 auto',
+            }}>
+              把每一个珍贵的家庭瞬间，变成会说故事的宝藏
             </p>
+          </section>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/create">
-                <button className="kid-btn-primary" style={{ fontSize: '1.1rem', padding: '0.875rem 2.5rem' }}>
-                  🌟 免费创作第一本
-                </button>
-              </Link>
-              <a href="#how-it-works" style={{ textDecoration: 'none' }}>
-                <button className="kid-btn-secondary" style={{ fontSize: '1.1rem', padding: '0.875rem 2rem' }}>
-                  看看怎么做的 →
-                </button>
-              </a>
+          {/* ── 乐园地图 ── */}
+          <section style={{ padding: '0 1rem 4rem', maxWidth: '960px', margin: '0 auto' }}>
+
+            {/* 地图标题牌 */}
+            <div style={{
+              textAlign: 'center', marginBottom: '1.75rem',
+            }}>
+              <div style={{
+                display: 'inline-block',
+                background: '#fff',
+                borderRadius: '1rem', padding: '0.6rem 1.5rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                border: '2.5px solid #FFD93D',
+              }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: '#1F2937', fontWeight: 700 }}>
+                  🗺️ 乐园地图
+                </span>
+              </div>
             </div>
 
-            <p style={{ marginTop: '1.25rem', color: 'var(--kid-text-muted)', fontSize: '0.85rem' }}>
-              第一本免费 · 无需注册 · 5 分钟上手
-            </p>
-          </div>
-        </section>
+            {/* 精选项目 — 暖暖绘本 大卡 */}
+            <div className="animate-card-pop" style={{ animationDelay: '0.1s', opacity: 0, marginBottom: '1.25rem' }}>
+              <AppCard app={APPS[0]} />
+            </div>
 
-        {/* ── 使用场景 ── */}
-        <section style={{ padding: '4rem 1.5rem', maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '0.75rem', fontSize: '1.6rem', fontWeight: 700, color: 'var(--kid-text-primary)' }}>
-            每个家庭都有值得讲述的故事
-          </h2>
-          <p className="kid-muted" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            不只是孩子，爸爸妈妈、爷爷奶奶的故事都值得被珍藏
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
-            {SCENARIOS.map((s) => (
-              <div key={s.title} className="kid-card" style={{ textAlign: 'center', padding: '1.75rem 1.25rem' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>{s.emoji}</div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.5rem', color: 'var(--kid-text-primary)' }}>{s.title}</div>
-                <div className="kid-caption">{s.desc}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── 怎么做的 ── */}
-        <section id="how-it-works" style={{
-          padding: '4rem 1.5rem',
-          background: 'linear-gradient(135deg, #fdf4ff 0%, #fff8f5 100%)',
-        }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ textAlign: 'center', marginBottom: '0.75rem', fontSize: '1.6rem', fontWeight: 700 }}>
-              三步，生成专属绘本
-            </h2>
-            <p className="kid-muted" style={{ textAlign: 'center', marginBottom: '3rem' }}>简单到孩子都能操作</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {STEPS.map((step) => (
-                <div key={step.num} style={{
-                  display: 'flex', alignItems: 'center', gap: '1.5rem',
-                  background: '#fff', borderRadius: '1.25rem',
-                  padding: '1.5rem 2rem',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                  border: '1.5px solid var(--kid-border-light)',
-                }}>
-                  <div style={{
-                    width: '56px', height: '56px', flexShrink: 0,
-                    background: 'linear-gradient(135deg, var(--kid-primary) 0%, var(--kid-magic) 100%)',
-                    borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.5rem',
-                  }}>
-                    {step.icon}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--kid-text-primary)', marginBottom: '0.25rem' }}>
-                      {step.title}
-                    </div>
-                    <div className="kid-muted">{step.desc}</div>
-                  </div>
-                  <div style={{
-                    marginLeft: 'auto', fontSize: '2rem', fontWeight: 900,
-                    color: 'var(--kid-primary-soft)', fontFamily: 'monospace',
-                  }}>
-                    {step.num}
-                  </div>
+            {/* 其余项目 小卡 3列 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+              {APPS.slice(1).map((app, i) => (
+                <div key={app.id} className="animate-card-pop" style={{ animationDelay: `${0.2 + i * 0.1}s`, opacity: 0 }}>
+                  <AppCard app={app} />
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ── 特点 ── */}
-        <section style={{ padding: '4rem 1.5rem', maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.6rem', fontWeight: 700 }}>
-            为什么选择暖暖绘本？
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-            {[
-              { icon: '👤', title: '真实人物主角', desc: '以你家孩子为主角，AI理解照片，保持外貌一致' },
-              { icon: '🤖', title: '全程 AI 创作', desc: '豆包视觉理解 + DeepSeek 故事创作 + 即梦 4.0 绘图' },
-              { icon: '📚', title: '寓教于乐', desc: '可融入动物知识、历史故事、人生道理等教育元素' },
-              { icon: '🎨', title: '多种画风', desc: '水彩绘本、日漫、3D卡通、中国风，自由选择' },
-              { icon: '💾', title: '高清下载', desc: '每页高清插画打包下载，支持冲印成实体书' },
-              { icon: '🔗', title: '一键分享', desc: '生成专属链接，发给爷爷奶奶，让全家人都能看' },
-            ].map((f) => (
-              <div key={f.title} style={{
-                padding: '1.5rem',
-                background: '#fff',
-                borderRadius: '1rem',
-                border: '1.5px solid var(--kid-border-light)',
-              }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{f.icon}</div>
-                <div style={{ fontWeight: 700, marginBottom: '0.4rem', color: 'var(--kid-text-primary)' }}>{f.title}</div>
-                <div className="kid-caption">{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── CTA 底部 ── */}
-        <section style={{
-          padding: '5rem 1.5rem',
-          background: 'linear-gradient(135deg, var(--kid-primary) 0%, var(--kid-magic) 100%)',
-          textAlign: 'center',
-        }}>
-          <h2 style={{ color: '#fff', fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 700, marginBottom: '1rem' }}>
-            今天的故事，值得被永远记住
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.1rem', marginBottom: '2.5rem' }}>
-            第一本完全免费，30 秒开始创作
-          </p>
-          <Link href="/create">
-            <button style={{
-              background: '#fff',
-              color: 'var(--kid-primary)',
-              border: 'none',
-              borderRadius: '1.25rem',
-              padding: '1rem 3rem',
-              fontSize: '1.125rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-              transition: 'transform 0.2s',
+          {/* ── 底部草地 ── */}
+          <div style={{
+            background: '#5D9B5A', padding: '2rem 1.5rem',
+            textAlign: 'center', marginTop: '-1px',
+          }}>
+            {/* 草地装饰线 */}
+            <div style={{
+              display: 'flex', justifyContent: 'center', gap: '0.3rem',
+              marginBottom: '1.25rem', flexWrap: 'wrap',
             }}>
-              🌟 免费开始创作
-            </button>
-          </Link>
-        </section>
+              {Array.from({ length: 20 }).map((_, i) => (
+                <span key={i} style={{
+                  fontSize: '1.4rem', display: 'inline-block',
+                  animation: `flag-wave ${1.5 + (i % 3) * 0.4}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.12}s`,
+                }}>🌱</span>
+              ))}
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', marginBottom: '0.4rem' }}>
+              暖暖的小世界 · 为爱而建
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.75rem' }}>
+              © 2025 dingmiaoxuan.com · 每个家庭故事都值得被珍藏
+            </p>
+          </div>
 
-        {/* ── Footer ── */}
-        <footer style={{
-          padding: '2rem 1.5rem',
-          textAlign: 'center',
-          borderTop: '1px solid var(--kid-border-light)',
-          color: 'var(--kid-text-muted)',
-          fontSize: '0.875rem',
-        }}>
-          <p style={{ marginBottom: '0.5rem', fontWeight: 600, color: 'var(--kid-text-primary)' }}>暖暖绘本</p>
-          <p>用 AI 留住每一个珍贵的家庭故事</p>
-          <p style={{ marginTop: '0.75rem', opacity: 0.6 }}>© 2025 暖暖绘本 · 用爱做的产品</p>
-        </footer>
+        </div>
       </div>
     </>
+  );
+}
+
+// ── App 卡片组件 ─────────────────────────────────────────────────────────────
+function AppCard({ app }: { app: typeof APPS[number] }) {
+  const inner = (
+    <div
+      style={{
+        background: app.bgColor,
+        borderRadius: '1.5rem',
+        overflow: 'hidden',
+        boxShadow: app.featured
+          ? '0 12px 48px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)'
+          : '0 6px 24px rgba(0,0,0,0.1)',
+        border: app.featured ? '2.5px solid rgba(255,255,255,0.8)' : '2px solid rgba(255,255,255,0.7)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        cursor: app.href ? 'pointer' : 'default',
+      }}
+      onMouseEnter={e => {
+        if (!app.href) return;
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
+        (e.currentTarget as HTMLElement).style.boxShadow = '0 20px 60px rgba(0,0,0,0.2)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.transform = '';
+        (e.currentTarget as HTMLElement).style.boxShadow = app.featured
+          ? '0 12px 48px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)'
+          : '0 6px 24px rgba(0,0,0,0.1)';
+      }}
+    >
+      {/* 彩色屋顶 */}
+      <div style={{
+        background: app.roofColor, padding: app.featured ? '1.5rem' : '1rem',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{
+            width: app.featured ? '64px' : '52px',
+            height: app.featured ? '64px' : '52px',
+            background: 'rgba(255,255,255,0.25)',
+            borderRadius: '1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: app.featured ? '2rem' : '1.6rem',
+            border: '2px solid rgba(255,255,255,0.4)',
+          }}>
+            {app.emoji}
+          </div>
+          <div>
+            <div style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: app.featured ? '1.5rem' : '1.2rem',
+              color: '#fff', fontWeight: 700,
+              textShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}>
+              {app.title}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
+              {app.subtitle}
+            </div>
+          </div>
+        </div>
+        <div style={{
+          background: 'rgba(255,255,255,0.95)',
+          color: app.badgeColor,
+          borderRadius: '2rem', padding: '0.3rem 0.875rem',
+          fontSize: '0.78rem', fontWeight: 700,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          whiteSpace: 'nowrap',
+        }}>
+          {app.badge}
+        </div>
+      </div>
+
+      {/* 内容区 */}
+      <div style={{ padding: app.featured ? '1.5rem 1.75rem' : '1.25rem 1.5rem' }}>
+        <p style={{
+          color: '#374151', lineHeight: 1.65,
+          fontSize: app.featured ? '1rem' : '0.9rem',
+          marginBottom: '1rem',
+        }}>
+          {app.desc}
+        </p>
+
+        {/* 标签 */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.25rem' }}>
+          {app.tags.map(tag => (
+            <span key={tag} style={{
+              background: 'rgba(0,0,0,0.06)', color: '#4B5563',
+              borderRadius: '2rem', padding: '0.2rem 0.75rem',
+              fontSize: '0.8rem', fontWeight: 600,
+            }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* 按钮 */}
+        {app.btnStyle === 'primary' ? (
+          <button className="kid-btn-primary" style={{
+            width: '100%',
+            fontSize: app.featured ? '1.05rem' : '0.95rem',
+          }}>
+            {app.btnText}
+          </button>
+        ) : (
+          <div style={{
+            textAlign: 'center', padding: '0.75rem',
+            border: '2px dashed #D1D5DB', borderRadius: '1rem',
+            color: '#9CA3AF', fontSize: '0.9rem', fontWeight: 600,
+          }}>
+            {app.btnText} 🔜
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (app.href) {
+    return <Link href={app.href} style={{ textDecoration: 'none', display: 'block' }}>{inner}</Link>;
+  }
+  return inner;
+}
+
+// ── 云朵 SVG ─────────────────────────────────────────────────────────────────
+function CloudSVG() {
+  return (
+    <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))' }}>
+      <ellipse cx="50" cy="45" rx="40" ry="18" fill="white" />
+      <ellipse cx="35" cy="38" rx="22" ry="20" fill="white" />
+      <ellipse cx="62" cy="35" rx="25" ry="22" fill="white" />
+      <ellipse cx="50" cy="30" rx="20" ry="18" fill="white" />
+    </svg>
   );
 }
